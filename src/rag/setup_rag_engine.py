@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 # config.py 파일 직접 로드 (절대경로)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-config_file = PROJECT_ROOT / 'config.py'
+config_file = PROJECT_ROOT / 'src/config.py'
 
 if not config_file.exists():
     raise FileNotFoundError(f"config.py를 찾을 수 없습니다: {config_file}")
