@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Day 1: 중앙 설정 관리
+모든 프로젝트 설정을 한곳에서 관리
+"""
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# 프로젝트 루트
+PROJECT_ROOT = Path(__file__).parent
+DATA_DIR = PROJECT_ROOT / 'data'
+LOGS_DIR = PROJECT_ROOT / 'logs'
+DOWNLOADS_DIR = DATA_DIR / 'downloads'
+
+# .env 로드
+load_dotenv(PROJECT_ROOT / '.env')
+
+
+class Settings:
+    """애플리케이션 설정"""
+    
+    # ========================
+    # Python 환경
+    # ========================
+    DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+    
+    # ========================
+    # Claude API
+    # ========================
+    ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
+    ANTHROPIC_MODEL = 'claude-3-5-sonnet-20241022'
+    MAX_TOKENS = 1024
+    
+    # ========================
+    # 네이버 클라우드 Object Storage
+    # ========================
+    NAVER_ENDPOINT = 'https://kr.object.ncloudstorage.com'
+    NAVER_REGION = os.getenv('NAVER_REGION', 'kr-standard')
+    NAVER_ACCESS_KEY = os.getenv('NAVER_ACCESS_KEY')
+    NAVER_SECRET_KEY = os.getenv('NAVER_SECRET_KEY')
+    NAVER_BUCKET_NAME = os.getenv('NAVER_BUCKET_NAME')
+    
+    # ========================
+    # 디렉토리
+    # ========================
+    DATA_DIR = DATA_DIR
+    LOGS_DIR = LOGS_DIR
+    DOWNLOADS_DIR = DOWNLOADS_DIR
+    
+    # 디렉토리 자동 생성
+    @staticmethod
+    def init_directories():
+        """필요한 디렉토리 생성"""
+        for dir_path in [Settings.DATA_DIR, Settings.LOGS_DIR, Settings.DOWNLOADS_DIR]:
+            dir_path.mkdir(parents=True, exist_ok=True)
+    
+    # ========================
+    # 문서 처리 설정 (Day 2+)
+    # ========================
+    CHUNK_SIZE = 512  # 토큰 단위
+    CHUNK_OVERLAP = 50
+    SUPPORTED_FORMATS = {'.pdf', '.pptx', '.docx', '.txt', '.png', '.jpg', '.jpeg'}
+    
+    # ========================
+    # 임베딩 설정 (Day 3+)
+    # ========================
+    EMBEDDING_MODEL = 'sentence-transformers/xlm-r-base-multilingual-nli-stsb'
+    EMBEDDING_DIMENSION = 768
+    
+    # ========================
+    # 벡터 DB 설정 (Day 3+)
+    # ========================
+    CHROMA_DB_PATH = DATA_DIR / 'chroma_db'
+    CHROMA_COLLECTION_NAME = 'rag_documents'
+    
+    # ========================
+    # 배치 설정 (Day 6+)
+    # ========================
+    BATCH_SCHEDULE_DAY = 1  # 매월 1일
+    BATCH_SCHEDULE_HOUR = 2  # 오전 2시
+    BATCH_SCHEDULE_MINUTE = 0
+    BATCH_STATE_FILE = DATA_DIR / 'batch_state.json'
+    
+    # ========================
+    # Azure 설정 (Day 12+)
+    # ========================
+    AZURE_SUBSCRIPTION_ID = os.getenv('AZURE_SUBSCRIPTION_ID')
+    AZURE_RESOURCE_GROUP = os.getenv('AZURE_RESOURCE_GROUP', 'rag-chatbot-rg')
+    AZURE_APP_NAME = os.getenv('AZURE_APP_NAME', 'rag-chatbot-app')
+    
+    # ========================
+    # 성능 설정
+    # ========================
+    API_TIMEOUT = 30  # 초
+    VECTOR_SEARCH_K = 5  # 상위 5개 검색
+    
+    @classmethod
+    def validate(cls):
+        """필수 설정 검증"""
+        required = {
+            'ANTHROPIC_API_KEY': 'Claude API 키',
+            'NAVER_ACCESS_KEY': '네이버 클라우드 Access Key',
+            'NAVER_SECRET_KEY': '네이버 클라우드 Secret Key',
+            'NAVER_BUCKET_NAME': '네이버 클라우드 Bucket 이름',
+        }
+        
+        missing = []
+        for key, desc in required.items():
+            if not getattr(cls, key):
+                missing.append(f"{key} ({desc})")
+        
+        if missing:
+            raise ValueError(f"필수 설정 누락: {', '.join(missing)}")
+        
+        return True
+
+
+# 초기화
+Settings.init_directories()
+
+
+if __name__ == "__main__":
+    # 설정 확인 (테스트용)
+    print("="*80)
+    print("📋 현재 설정 확인")
+    print("="*80)
+    
+    print(f"DEBUG: {Settings.DEBUG}")
+    print(f"LOG_LEVEL: {Settings.LOG_LEVEL}")
+    print(f"DATA_DIR: {Settings.DATA_DIR}")
+    print(f"DOWNLOADS_DIR: {Settings.DOWNLOADS_DIR}")
+    print(f"NAVER_ENDPOINT: {Settings.NAVER_ENDPOINT}")
+    print(f"NAVER_BUCKET_NAME: {Settings.NAVER_BUCKET_NAME}")
+    print(f"ANTHROPIC_MODEL: {Settings.ANTHROPIC_MODEL}")
+    print(f"EMBEDDING_MODEL: {Settings.EMBEDDING_MODEL}")
+    
+    print("\n" + "="*80)
+    print("✅ 설정 로드 완료")
+    print("="*80)
