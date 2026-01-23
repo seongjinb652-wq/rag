@@ -28,11 +28,20 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 프로젝트 루트 경로
+# config.py 파일 직접 로드 (절대경로)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+config_file = PROJECT_ROOT / 'config.py'
 
-from config import Settings
+if not config_file.exists():
+    raise FileNotFoundError(f"config.py를 찾을 수 없습니다: {config_file}")
+
+# config.py를 동적으로 로드
+import importlib.util
+spec = importlib.util.spec_from_file_location("config", config_file)
+config_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(config_module)
+
+Settings = config_module.Settings
 
 
 class DocumentProcessor:
