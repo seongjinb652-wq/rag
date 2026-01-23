@@ -13,7 +13,8 @@ sqlalchemy==2.0.23
 
 # NLP & Embeddings
 sentence-transformers==2.2.2
-torch==2.1.2+cu118  # CUDA 버전 (CPU: torch==2.1.2)
+#torch==2.1.2+cu118  # CUDA 버전 (CPU: torch==2.1.2)
+torch==2.1.2  # CUDA 버전 (CPU: torch==2.1.2 GPU:2.1.2+cu118 )
 transformers==4.35.2
 
 # Document Processing
