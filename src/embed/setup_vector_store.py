@@ -31,8 +31,11 @@ logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from config import Settings
-
+import importlib.util
+spec = importlib.util.spec_from_file_location("config", config_file)
+config_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(config_module)
+Settings = config_module.Settings
 
 class VectorStore:
     """벡터 저장소 - Chroma DB"""
