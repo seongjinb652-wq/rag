@@ -77,10 +77,7 @@ def init_rag_engine():
     import chromadb
     # chromadb.config.settings.telemetry = False # ChromaDB 0.3.x ~ 0.4.x 초반 방식
     # return RAGEngine()                         # ChromaDB 0.3.x ~ 0.4.x 초반 방식
-    from chromadb.config import Settings
-    client_settings = Settings(anonymized_telemetry=False) # telemetry 끄기.  ChromaDB 0.5.x (현재) 방식
-    
-    return RAGEngine(settings=client_settings)  # RAGEngine 초기화 시 client_settings 전달. ChromaDB 0.5.x (현재) 방식
+    return RAGEngine() # settings 인자 없이 호출
 
 
 def init_session_state():
