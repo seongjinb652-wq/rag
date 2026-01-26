@@ -64,8 +64,13 @@ class RAGEngine:
         logger.info(f"✅ Chroma DB 연결: {db_path}")
         
         # Claude API 클라이언트
-        self.client_llm = Anthropic(api_key=Settings.ANTHROPIC_API_KEY)
-        logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
+        # self.client_llm = Anthropic(api_key=Settings.ANTHROPIC_API_KEY)
+        # logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
+
+         # OpenAI API 클라이언트
+        from openai import OpenAI
+        self.client_llm = OpenAI(api_key=Settings.OPENAI_API_KEY)
+        # logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
         
         # 임베딩 모델
         from sentence_transformers import SentenceTransformer
