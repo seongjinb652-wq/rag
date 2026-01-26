@@ -23,6 +23,7 @@ import sys
 import json
 from datetime import datetime
 
+# path 설정.
 # config.py 로드
 PROJECT_ROOT = Path(__file__).parent.parent
 config_file = PROJECT_ROOT / 'config.py'
@@ -37,8 +38,7 @@ Settings = config_module.Settings
 # RAG 엔진 임포트
 # sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'rag'))
 sys.path.insert(0, str(PROJECT_ROOT / 'rag'))
-# from setup_rag_engine import RAGEngine
-from rag.setup_rag_engine import RAGEngine
+from setup_rag_engine import RAGEngine
 
 # ========================
 # Streamlit 설정
