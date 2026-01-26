@@ -50,8 +50,9 @@ class RAGEngine:
     def __init__(self):
         """초기화"""
         import chromadb
-        from anthropic import Anthropic
-        
+        # from anthropic import Anthropic
+        from openai import OpenAI
+
         logger.info("🔧 RAG 엔진 초기화 중...")
         
         # Chroma DB 연결
@@ -68,7 +69,6 @@ class RAGEngine:
         # logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
 
          # OpenAI API 클라이언트
-        from openai import OpenAI
         self.client_llm = OpenAI(api_key=Settings.OPENAI_API_KEY)
         # logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
         
@@ -159,15 +159,25 @@ class RAGEngine:
         
         try:
             # Claude API 호출
-            response = self.client_llm.messages.create(
-                model=Settings.ANTHROPIC_MODEL,
-                max_tokens=Settings.MAX_TOKENS,
-                system=system_prompt,
-                messages=self.conversation_history
+            # response = self.client_llm.messages.create(
+            #    model=Settings.ANTHROPIC_MODEL,
+            #    max_tokens=Settings.MAX_TOKENS,
+            #    system=system_prompt,
+            #    messages=self.conversation_history
+            # )
+            # answer = response.content[0].text
+            
+            # OPENAI API 호출 시작
+            response = self.client_llm.chat.completions.create(
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": query}
+                ]
             )
-            
-            answer = response.content[0].text
-            
+            answer = response.choices[0].message.content
+            # OPENAI API 호출 끝
+
             # 대화 히스토리에 추가
             self.conversation_history.append({
                 "role": "assistant",
