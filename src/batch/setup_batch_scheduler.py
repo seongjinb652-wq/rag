@@ -32,7 +32,7 @@ import boto3
 import hashlib
 
 # config.py 로드
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent
 config_file = PROJECT_ROOT / 'config.py'
 
 import importlib.util
