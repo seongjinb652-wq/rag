@@ -35,7 +35,11 @@ class Settings:
     ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
     ANTHROPIC_MODEL = 'claude-3-5-sonnet-20241022'
     MAX_TOKENS = 1024
-    
+    # ========================
+    # OPENAI API
+    # ========================
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    OPENAI_MODEL = 'gpt-4o-mini'  # (저비용)    
     # ========================
     # 네이버 클라우드 Object Storage
     # ========================
