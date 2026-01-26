@@ -68,7 +68,7 @@ class RAGEngine:
         # self.client_llm = Anthropic(api_key=Settings.ANTHROPIC_API_KEY)
         # logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
 
-         # OpenAI API 클라이언트
+        # OpenAI API 클라이언트
         self.client_llm = OpenAI(api_key=Settings.OPENAI_API_KEY)
         # logger.info(f"✅ Claude API 연결: {Settings.ANTHROPIC_MODEL}")
         
