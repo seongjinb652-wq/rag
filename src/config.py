@@ -72,9 +72,10 @@ class Settings:
     # EMBEDDING_MODEL = 'sentence-transformers/xlm-r-base-multilingual-nli-stsb'
     EMBEDDING_DIMENSION = 768
     # 변경 (더 가벼움)
-    # EMBEDDING_MODEL = 'all-MiniLM-L6-v2'  # 영문 기본 (빠름)  
+    # EMBEDDING_MODEL = 'all-MiniLM-L6-v2'  # 영문 기본 (빠름)   동작.
     # 한국어 필요시
-    EMBEDDING_MODEL = 'ko-sbert-multitask'
+    # EMBEDDING_MODEL = 'ko-sbert-multitask'
+    EMBEDDING_MODEL = 'paraphrase-multilingual-MiniLM-L12-v2'
     # ========================
     # 벡터 DB 설정 (Day 3+)
     # ========================
