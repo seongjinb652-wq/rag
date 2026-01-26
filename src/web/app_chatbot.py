@@ -24,7 +24,7 @@ import json
 from datetime import datetime
 
 # config.py 로드
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent
 config_file = PROJECT_ROOT / 'config.py'
 
 import importlib.util
@@ -35,8 +35,8 @@ spec.loader.exec_module(config_module)
 Settings = config_module.Settings
 
 # RAG 엔진 임포트
-sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'rag'))
-
+# sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'rag'))
+sys.path.insert(0, str(PROJECT_ROOT / 'rag'))
 from setup_rag_engine import RAGEngine
 
 
@@ -265,7 +265,15 @@ def main():
     
     # 사이드바
     with col_sidebar:
-        search_k = render_sidebar()
+    #    search_k = render_sidebar()
+        search_k = st.slider(
+            "검색 결과 수",
+            min_value=1,
+            max_value=10,
+            value=Settings.VECTOR_SEARCH_K,
+            help="유사 문서 검색 개수"
+        )
+
     
     # 메인 채팅 영역
     with col_chat:
