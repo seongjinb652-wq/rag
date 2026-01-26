@@ -25,6 +25,7 @@ Notes    :
     - 상태 파일(batch_state_local.json)을 삭제하면 전체 재처리 가능
 ===============================================================================
 """
+
 import os
 import json
 import logging
