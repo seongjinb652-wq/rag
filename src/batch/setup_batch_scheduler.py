@@ -326,11 +326,13 @@ class BatchProcessor:
         logger.info(f"📦 배치 처리 시작: {len(files)}개 파일")
         
         # Document Processor 임포트
-        sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'parse'))
+        # sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'parse'))
+        sys.path.insert(0, str(PROJECT_ROOT / 'parse'))
         from setup_document_processor import DocumentProcessor
         
         # Vector Store 임포트
-        sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'embed'))
+        # sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'embed'))
+        sys.path.insert(0, str(PROJECT_ROOT / 'embed'))
         from setup_vector_store import VectorStore
         
         processor = DocumentProcessor()
