@@ -9,3 +9,4 @@ class Settings:
 
     # 로그 디렉토리
     LOG_DIR = Path("logs")
+    SUPPORTED_FORMATS = {'.pdf', '.docx', '.doc', '.pptx', '.txt'}
