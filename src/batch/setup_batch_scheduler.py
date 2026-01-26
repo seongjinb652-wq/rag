@@ -285,7 +285,8 @@ class BatchProcessor:
         logger.info(f"🧪 샘플 테스트: {len(sample_files)}개 파일")
         
         # Document Processor 임포트
-        sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'parse'))
+        # sys.path.insert(0, str(PROJECT_ROOT / 'src' / 'parse'))
+        sys.path.insert(0, str(PROJECT_ROOT / 'parse'))
         from setup_document_processor import DocumentProcessor
         
         processor = DocumentProcessor()
