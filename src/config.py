@@ -18,6 +18,11 @@ DOWNLOADS_DIR = DATA_DIR / 'downloads'
 
 # .env 로드
 load_dotenv(PROJECT_ROOT / '.env')
+# copilot  추천
+load_dotenv()
+# OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "C:/Users/USER/rag/src/data/chroma_db")
 
 
 class Settings:
