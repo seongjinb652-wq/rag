@@ -80,7 +80,7 @@ class EnvironmentChecker:
         
         required_packages = [
             'dotenv',
-            'boto3',
+            # 'boto3',  # ❌ 제거 대상
             'requests',
             'PyPDF2',
             'pptx',
@@ -112,11 +112,11 @@ class EnvironmentChecker:
         print("="*80)
         
         required_vars = {
-            'ANTHROPIC_API_KEY': 'Claude API 키',
-            'NAVER_ACCESS_KEY': '네이버 클라우드 Access Key',
-            'NAVER_SECRET_KEY': '네이버 클라우드 Secret Key',
-            'NAVER_BUCKET_NAME': '네이버 클라우드 Bucket 이름',
-            'NAVER_REGION': '네이버 클라우드 리전',
+            # 'ANTHROPIC_API_KEY': 'Claude API 키',              # 소규모 프로젝트 비용 문제로 수동 다운로드. 대형 대비 남겨둠.
+            # 'NAVER_ACCESS_KEY': '네이버 클라우드 Access Key',   # 소규모 프로젝트 비용 문제로 수동 다운로드. 대형 대비 남겨둠.
+            # 'NAVER_SECRET_KEY': '네이버 클라우드 Secret Key',   # 소규모 프로젝트 비용 문제로 수동 다운로드. 대형 대비 남겨둠.
+            # 'NAVER_BUCKET_NAME': '네이버 클라우드 Bucket 이름',  # 소규모 프로젝트 비용 문제로 수동 다운로드. 대형 대비 남겨둠.
+            # 'NAVER_REGION': '네이버 클라우드 리전',              # 소규모 프로젝트 비용 문제로 수동 다운로드. 대형 대비 남겨둠.
         }
         
         missing = []
@@ -160,9 +160,11 @@ class EnvironmentChecker:
         
         self.checks['directories'] = True
         return True
-    
-    def check_naver_cloud(self):
-        """네이버 클라우드 연결 테스트"""
+
+    def check_naver_cloud(self):                           
+        """네이버 클라우드 연결 테스트 (비활성화)""" # ❌ 현재 프로젝트에서는 사용하지 않음 
+        pass
+        ''' # 소규모 프로젝트 비용 문제로 수동 다운로드. 대형 대비 남겨둠
         print("\n" + "="*80)
         print("5️⃣ 네이버 클라우드 연결 테스트")
         print("="*80)
@@ -204,10 +206,12 @@ class EnvironmentChecker:
                 print(f"   https://console.ncloud.com/object-storage")
                 return False
         
+    
         except Exception as e:
             print(f"❌ 네이버 클라우드 연결 실패: {e}")
             print("   Access Key, Secret Key 확인하세요")
             return False
+        '''
     
     def run_all_checks(self):
         """모든 확인 실행"""
@@ -234,7 +238,7 @@ class EnvironmentChecker:
         dir_ok = self.check_directories()
         
         # 5. 네이버 클라우드
-        ncloud_ok = self.check_naver_cloud()
+        # ncloud_ok = self.check_naver_cloud()   # ❌ 현재 프로젝트에서는 사용하지 않음 
         
         # 결과
         print("\n" + "="*80)
