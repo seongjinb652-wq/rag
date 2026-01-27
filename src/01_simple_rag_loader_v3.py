@@ -1,41 +1,44 @@
 # (단락보존 + 키워드 가중치형 + 메모리 초기화)
 import os
-import chromadb
+import shutil
+import logging
 from pathlib import Path
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
 
-# 1. 경로 및 설정
+# 경로 및 설정
 TXT_DIR = Path(r"C:/Users/USER/rag/src/data/text_converted")
 DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
 COLLECTION_NAME = "indonesia_pdt_docs"
-OPENAI_API_KEY = "YOUR_API_KEY"
+os.environ["OPENAI_API_KEY"] = "YOUR_API_KEY" # 실제 키를 넣어주세요
 
 def initialize_and_load():
-    # 2. 기존 DB 폴더가 있다면 삭제 (완전 초기화)
-    import shutil
+    # 1. DB 초기화
     if os.path.exists(DB_PATH):
-        print(f"🗑️ 기존 DB 삭제 중: {DB_PATH}")
+        print(f"🗑️ 기존 DB 삭제 및 초기화: {DB_PATH}")
         shutil.rmtree(DB_PATH)
 
-    # 3. 임베딩 모델 및 텍스트 스플리터 설정
-    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+    # 2. 모델 및 스플리터 설정
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small") # 가성비 좋은 최신 모델
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000, 
-        chunk_overlap=100,
+        chunk_overlap=150,
         separators=["\n\n", "\n", " ", ""]
     )
 
-    # 4. 파일 목록 가져오기
+    # 3. 파일 목록
     all_files = list(TXT_DIR.glob("*.txt"))
-    print(f"🚀 총 {len(all_files)}개 파일 로드 시작...")
+    print(f"🚀 총 {len(all_files)}개 파일 DB 적재 시작...")
 
-    # 5. 배치 처리 (메모리 보호)
-    batch_size = 10 
+    # 초기 DB 생성
+    vector_db = None
+
+    # 4. 배치 처리 (메모리 효율화)
+    batch_size = 20 
     for i in range(0, len(all_files), batch_size):
         batch_files = all_files[i : i + batch_size]
-        documents = []
+        texts = []
         metadatas = []
 
         for file_path in batch_files:
@@ -43,25 +46,28 @@ def initialize_and_load():
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
                     chunks = text_splitter.split_text(content)
-                    
                     for chunk in chunks:
-                        documents.append(chunk)
+                        texts.append(chunk)
                         metadatas.append({"source": file_path.name})
             except Exception as e:
-                print(f"❌ 파일 읽기 오류 ({file_path.name}): {e}")
+                print(f"❌ 오류 ({file_path.name}): {e}")
 
-        # DB에 배치 단위로 추가 및 저장
-        if documents:
-            vector_db = Chroma.from_texts(
-                texts=documents,
-                embedding=embeddings,
-                metadatas=metadatas,
-                persist_directory=DB_PATH,
-                collection_name=COLLECTION_NAME
-            )
-            print(f"✅ 배치 완료: {i + len(batch_files)} / {len(all_files)}")
+        # DB에 데이터 추가
+        if texts:
+            if vector_db is None:
+                vector_db = Chroma.from_texts(
+                    texts=texts,
+                    embedding=embeddings,
+                    metadatas=metadatas,
+                    persist_directory=DB_PATH,
+                    collection_name=COLLECTION_NAME
+                )
+            else:
+                vector_db.add_texts(texts=texts, metadatas=metadatas)
+            
+            print(f"✅ 배치 완료: {min(i + batch_size, len(all_files))} / {len(all_files)}")
 
-    print(f"🏁 모든 데이터가 {DB_PATH}에 성공적으로 저장되었습니다.")
+    print(f"🏁 DB 구축 완료! 위치: {DB_PATH}")
 
 if __name__ == "__main__":
     initialize_and_load()
