@@ -1,4 +1,11 @@
+# 환경 변수 파일
 .env
+.env.*
+
+# 다운로드/로그
+src/data/downloads/
+src/logs/
+
 # Python cache
 __pycache__/
 *.pyc
