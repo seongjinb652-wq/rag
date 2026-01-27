@@ -66,24 +66,67 @@ class DocumentConverterV3:
         except Exception as e:
             logger.error(f"❌ PDF 스마트 추출 실패 ({file_path.name}): {e}")
             return ""
+################################
+    import olefile
+    import zlib
+    import struct
 
-    def extract_hwp_text(self, file_path: Path) -> str:
-        """HWP 파일 텍스트 추출"""
-        text = ""
+    def extract_hwp_text_v4(file_path):
+        """HWP 파일의 깨짐을 최소화한 텍스트 추출 함수"""
         try:
-            f = olefile.OleFileIO(str(file_path))
+            f = olefile.OleFileIO(file_path)
             dirs = f.listdir()
-            bodytext = [d for d in dirs if d[0].startswith("BodyText")]
+        
+            # HWP 버전 및 암호화 여부 체크 (FileHeader)
+            if ["FileHeader"] not in dirs:
+                return ""
+            
+            # 본문 데이터가 담긴 Section들 찾기
+            bodytext = [d for d in dirs if d[0].startswith("BodyText/Section")]
+            full_text = ""
+        
             for section in bodytext:
                 data = f.openstream(section).read()
-                try: decompressed = zlib.decompress(data, -15)
-                except: decompressed = data
-                text += decompressed.decode('utf-16', errors='ignore')
+                # 압축 여부 확인 (HWP는 보통 압축되어 있음)
+                try:
+                    # zlib 압축 해제 (-15는 헤더 없는 raw deflate 대응)
+                    decompressed = zlib.decompress(data, -15)
+                except:
+                    decompressed = data
+            
+                # 한글(utf-16) 디코딩 및 제어문자 정제
+                section_text = decompressed.decode('utf-16', errors='ignore')
+            
+                # HWP 특유의 제어문자(글자 크기, 글꼴 변경 등) 제거
+                clean_text = ""
+                for char in section_text:
+                    if ord(char) >= 32 or char in "\n\r\t":
+                        clean_text += char
+                full_text += clean_text
+            
             f.close()
-            text = re.sub(r'[^\w\s\.\,\?\!\(\)\[\]\%\:\-\d\uAC00-\uD7A3]+', ' ', text)
+            return full_text
         except Exception as e:
-            logger.error(f"❌ HWP 추출 실패 ({file_path.name}): {e}")
-        return text
+            return f"Error: {str(e)}"
+
+    
+#    def extract_hwp_text(self, file_path: Path) -> str:
+#        """HWP 파일 텍스트 추출"""
+#        text = ""
+#        try:
+#            f = olefile.OleFileIO(str(file_path))
+#            dirs = f.listdir()
+#            bodytext = [d for d in dirs if d[0].startswith("BodyText")]
+#            for section in bodytext:
+#                data = f.openstream(section).read()
+#                try: decompressed = zlib.decompress(data, -15)
+#                except: decompressed = data
+#                text += decompressed.decode('utf-16', errors='ignore')
+#            f.close()
+#            text = re.sub(r'[^\w\s\.\,\?\!\(\)\[\]\%\:\-\d\uAC00-\uD7A3]+', ' ', text)
+#        except Exception as e:
+#            logger.error(f"❌ HWP 추출 실패 ({file_path.name}): {e}")
+#        return text
 
     def convert(self):
         target_exts = {'.pdf', '.docx', '.pptx', '.txt', '.hwp'}
