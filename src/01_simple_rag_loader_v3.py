@@ -1,4 +1,4 @@
-# (단락보존 + 키워드 가중치형 + 메모리 초기화)
+# (단락보존 + 키워드 가중치형 + 메모리 초기화 + .env 로드)
 import os
 import shutil
 import logging
@@ -6,12 +6,25 @@ from pathlib import Path
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
+from dotenv import load_dotenv # .env 로드 함수
+
+# .env 파일 로드
+load_dotenv() 
+
+# 이제 os.getenv를 통해 안전하게 가져옵니다.
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# 확인용 (키의 앞 5자리만 출력해서 잘 가져왔는지 체크)
+if OPENAI_API_KEY:
+    print(f"🔑 API KEY 로드 성공: {OPENAI_API_KEY[:5]}*****")
+else:
+    print("❌ .env 파일에서 OPENAI_API_KEY를 찾을 수 없습니다.")
+
 
 # 경로 및 설정
 TXT_DIR = Path(r"C:/Users/USER/rag/src/data/text_converted")
 DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
 COLLECTION_NAME = "indonesia_pdt_docs"
-os.environ["OPENAI_API_KEY"] = "YOUR_API_KEY" # 실제 키를 넣어주세요
 
 def initialize_and_load():
     # 1. DB 초기화
