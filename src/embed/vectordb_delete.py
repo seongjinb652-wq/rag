@@ -2,7 +2,7 @@
 DB_DIR = "C:/Users/USER/rag/src/data/chroma_db"
 COLLECTION = "my_company_analy"
 import chromadb
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 
 
 def delete_all_docs(collection, batch_size=5000):
