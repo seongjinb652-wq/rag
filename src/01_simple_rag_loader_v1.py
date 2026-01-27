@@ -46,33 +46,37 @@ class RobustRAGLoaderV1:
             name=COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"}
         )
-
+        
     def extract_hwp_text(self, file_path: Path) -> str:
-        """HWP 파일에서 텍스트 추출 (OLE 구조 분석)"""
+        import olefile
+        import zlib
+        import re
+
         text = ""
         try:
             f = olefile.OleFileIO(str(file_path))
             dirs = f.listdir()
+            if ["FileHeader"] not in dirs: return ""
 
-            if ["FileHeader"] not in dirs:
-                return ""
-
-            # BodyText 섹션들에서 텍스트 추출
             bodytext = [d for d in dirs if d[0].startswith("BodyText")]
             for section in bodytext:
                 data = f.openstream(section).read()
                 try:
-                    # HWP는 일반적으로 zlib으로 압축되어 있음
                     decompressed = zlib.decompress(data, -15)
                 except:
                     decompressed = data
                 
-                # 유니코드 텍스트 위주로 디코딩 (오류 무시)
-                text += decompressed.decode('utf-16', errors='ignore')
+                # 깨끗한 텍스트만 추출하기 위한 처리
+                raw_content = decompressed.decode('utf-16', errors='ignore')
+                
+                # [핵심] 한글, 영문, 숫자, 일반 문장부호만 남기고 제거
+                clean_content = re.sub(r'[^\w\s\.\,\?\!\(\)\[\]\%\:\-\d\uAC00-\uD7A3]+', '', raw_content)
+                text += clean_content
             f.close()
         except Exception as e:
             logger.error(f"❌ {file_path.name} HWP 추출 실패: {e}")
         return text
+    
 
     def extract_text(self, file_path: Path) -> str:
         """파일별 텍스트 추출 및 보정"""
