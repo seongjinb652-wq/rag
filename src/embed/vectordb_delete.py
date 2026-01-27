@@ -1,8 +1,11 @@
 # DB_DIR = "./chroma_db"
 DB_DIR = "C:/Users/USER/rag/src/data/chroma_db"
 COLLECTION = "my_company_analy"
+import os
 import chromadb
 from langchain_community.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
+
 
 
 def delete_all_docs(collection, batch_size=5000):
