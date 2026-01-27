@@ -21,10 +21,11 @@ import hashlib
 # 설정
 class Settings:
     TARGET_DIR = Path(r"C:/Users/USER/Downloads/@@@인도네시아PDT암센터FS")
-    STATE_FILE = Path("batch_state_local.json")
+    STATE_FILE = Path("C:/Users/USER/rag/src/logs/batch_state_local.json")
     LOG_DIR = Path("logs")
     SUPPORTED_FORMATS = {'.pdf', '.docx', '.doc', '.pptx', '.txt'}
 
+    
 # 로그 디렉토리 생성
 Settings.LOG_DIR.mkdir(parents=True, exist_ok=True)
 
