@@ -1,6 +1,7 @@
-#DB_DIR = "./chroma_db"
+# DB_DIR = "./chroma_db"
 DB_DIR = "C:/Users/USER/rag/src/data/chroma_db"
 COLLECTION = "my_company_analy"
+import chromadb
 
 
 def delete_all_docs(collection, batch_size=5000):
