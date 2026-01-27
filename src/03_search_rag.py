@@ -44,9 +44,18 @@ class RAGSearcher:
             print(f"📄 내용: {content[:150]}...")
             print("-" * 50)
 
+
 if __name__ == "__main__":
     searcher = RAGSearcher()
     
-    # 테스트 질문
-    user_query = "인도네시아 투자 박람회에서 소개된 PDT 치료의 특징은 뭐야?"
-    searcher.search(user_query)
+    # 테스트할 질문 리스트
+    test_queries = [
+        "인도네시아 투자 박람회에서 소개된 PDT 치료의 특징은 뭐야?",
+        "한경 부스 구매 의향 공문에 어떤 내용이 담겨 있어?"
+    ]
+    
+    for i, user_query in enumerate(test_queries, 1):
+        print(f"\n\n🚀 [테스트 질문 {i}] {user_query}")
+        print("="*60)
+        searcher.search(user_query)
+        print("="*60)
