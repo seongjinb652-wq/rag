@@ -4,6 +4,7 @@
 import os
 import logging
 import hashlib
+import fitz  # PyMuPDF
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict
@@ -48,26 +49,46 @@ class RobustRAGLoaderV2:
             metadata={"hnsw:space": "cosine"}
         )
 
+    # ... 기존 import 유지
     def extract_text(self, file_path: Path) -> str:
-        """파일별 텍스트 추출"""
+        """파일별 텍스트 추출 (PyMuPDF 엔진 + 용어 보정)"""
         ext = file_path.suffix.lower()
         text = ""
         try:
+            # 1. 파일 확장자별 텍스트 추출
             if ext == '.pdf':
-                reader = PdfReader(file_path)
-                text = " ".join([p.extract_text() for p in reader.pages if p.extract_text()])
+                # PyMuPDF(fitz) 사용 - 한글 추출 능력 우수
+                doc = fitz.open(file_path)
+                text = " ".join([page.get_text() for page in doc])
+                doc.close()
             elif ext == '.docx':
+                from docx import Document
                 doc = Document(file_path)
-                text = " ".join([p.text for p in doc.paragraphs])
+                text = "\n".join([p.text for p in doc.paragraphs])
             elif ext == '.pptx':
+                from pptx import Presentation
                 prs = Presentation(file_path)
                 text = " ".join([shape.text for slide in prs.slides for shape in slide.shapes if hasattr(shape, "text")])
             elif ext == '.txt':
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                     text = f.read()
+
+            # 2. 한글 인코딩 오류 용어 보정 (Glossary Correction)
+            if text:
+                corrections = {
+                    "싞": "신", "짂": "진", "읶": "인", "핚": "한", 
+                    "웎": "원", "상홖": "상환", "읷": "일", "젂": "전",
+                    "곾": "관", "첚": "천", "중갂": "중간", "얶": "언",
+                    "읻": "인", "싵": "실", "엓": "엑", "짗": "지"
+                }
+                for wrong, right in corrections.items():
+                    text = text.replace(wrong, right)
+
         except Exception as e:
             logger.error(f"❌ {file_path.name} 추출 실패: {e}")
+        
         return text
+
 
     def run(self):
         all_files = []
