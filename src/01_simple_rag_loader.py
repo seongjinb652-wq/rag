@@ -89,11 +89,11 @@ class RobustRAGLoaderV2:
             
             try:
                 # OpenAI 배치 임베딩 (여러 청크를 한 번의 호출로 처리)
-                # response = self.client.embeddings.create(input=chunks, model=EMBED_MODEL)
-                # embeddings = [data.embedding for data in response.data]
+                response = self.client.embeddings.create(input=chunks, model=EMBED_MODEL)
+                embeddings = [data.embedding for data in response.data]
                 # 가짜 임베딩 생성 (모델 크기 1536에 맞춘 랜덤값)
                 import numpy as np
-                embeddings = np.random.rand(len(chunks), 1536).tolist()
+                # embeddings = np.random.rand(len(chunks), 1536).tolist()
     
                 # 이제 아래 저장 로직이 정상 작동하며 DB에 숫자가 쌓일 겁니다!
                 ids = [hashlib.md5(f"{file_path.name}_{i}".encode()).hexdigest() for i in range(len(chunks))]
