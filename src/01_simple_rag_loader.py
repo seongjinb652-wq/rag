@@ -20,7 +20,7 @@ TARGET_DIR = Path(r"C:/Users/USER/Downloads/@@@인도네시아PDT암센터FS")
 DB_PATH = Path(r"C:/Users/USER/rag/src/data/chroma_db")
 COLLECTION_NAME = "indonesia_pdt_docs"
 # OpenAI 설정
-OPENAI_API_KEY = "your-api-key-here" # 여기에 키를 넣거나 환경변수 사용
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # 여기에 키를 넣거나 환경변수 사용
 EMBED_MODEL = "text-embedding-3-small" # 가성비와 성능이 가장 좋은 최신 모델
 
 CHUNK_SIZE = 800
