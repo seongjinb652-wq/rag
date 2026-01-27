@@ -92,7 +92,7 @@ class RobustRAGLoaderV2:
                 response = self.client.embeddings.create(input=chunks, model=EMBED_MODEL)
                 embeddings = [data.embedding for data in response.data]
                 # 가짜 임베딩 생성 (모델 크기 1536에 맞춘 랜덤값)
-                import numpy as np
+                # import numpy as np
                 # embeddings = np.random.rand(len(chunks), 1536).tolist()
     
                 # 이제 아래 저장 로직이 정상 작동하며 DB에 숫자가 쌓일 겁니다!
