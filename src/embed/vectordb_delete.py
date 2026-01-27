@@ -31,6 +31,7 @@ def delete_all_docs(collection, batch_size=5000):
 
 # 앱 시작 시 1회만 생성/오픈 (중요)
 client = chromadb.PersistentClient(path=DB_DIR)
+embeddings = OpenAIEmbeddings()
 vector_store = Chroma(
     client=client,
     collection_name=COLLECTION,
