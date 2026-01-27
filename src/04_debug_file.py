@@ -7,15 +7,20 @@ COLLECTION_NAME = "indonesia_pdt_docs"
 client = chromadb.PersistentClient(path=str(DB_PATH))
 collection = client.get_collection(name=COLLECTION_NAME)
 
-# 특정 파일 이름이 포함된 데이터만 검색 (최대 5개 청크)
-results = collection.get(
-    where={"source": "[kisrating}부평주상복합_2015.7.8(효성).pdf"},
-    limit=5
-)
+# 1. '부평'이 포함된 모든 메타데이터 가져오기
+all_data = collection.get()
+# 파일명에 '부평'이 포함된 인덱스 찾기
+indices = [i for i, m in enumerate(all_data['metadatas']) if '부평' in m['source']]
 
-print(f"\n📂 파일명: {results['metadatas'][0]['source']}")
-print("="*50)
-for i, doc in enumerate(results['documents']):
-    print(f"\n[청크 {i+1}] 미리보기:")
-    print(doc[:300]) # 앞부분 300자만 출력
-    print("-" * 30)
+if not indices:
+    print("❌ DB에서 '부평' 관련 파일을 찾을 수 없습니다. 01_loader가 정상 종료되었는지 확인하세요.")
+else:
+    print(f"✅ 총 {len(indices)}개의 '부평' 관련 청크를 찾았습니다.")
+    # 첫 5개만 출력
+    for idx in indices[:5]:
+        source = all_data['metadatas'][idx]['source']
+        content = all_data['documents'][idx]
+        print(f"\n📂 출처: {source}")
+        print("-" * 50)
+        print(content[:400]) # 400자 출력
+        print("-" * 50)
