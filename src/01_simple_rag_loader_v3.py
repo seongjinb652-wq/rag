@@ -4,8 +4,9 @@ import shutil
 import logging
 from pathlib import Path
 from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
+# from langchain_chroma import Chroma
 from dotenv import load_dotenv # .env 로드 함수
 
 # .env 파일 로드
@@ -77,7 +78,8 @@ def initialize_and_load():
                 )
             else:
                 vector_db.add_texts(texts=texts, metadatas=metadatas)
-            
+                
+            vector_db.persist()  # 0.4.x 버전에서 데이터를 디스크에 즉시 쓰도록 강제함
             print(f"✅ 배치 완료: {min(i + batch_size, len(all_files))} / {len(all_files)}")
 
     print(f"🏁 DB 구축 완료! 위치: {DB_PATH}")
