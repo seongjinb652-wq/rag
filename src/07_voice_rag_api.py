@@ -13,7 +13,7 @@ from alias_map import clean_and_refine
 # 1. 초기화 및 설정
 DB_PATH = "./chroma_db"
 COLLECTION_NAME = "project_docs"
-app = FastAPI(title="FS Voice RAG System (Medium)")
+app = FastAPI(title="FS Voice RAG System (large-v3)")
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,8 +32,12 @@ vector_db = Chroma(
 llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
 # Whisper Medium 모델 로드 (인식률 대폭 향상)
-print("⏳ Whisper STT 엔진(Medium) 로딩 중... (최초 실행 시 다운로드)")
-stt_model = WhisperModel("medium", device="cpu", compute_type="int8")
+# print("⏳ Whisper STT 엔진(Medium) 로딩 중... (최초 실행 시 다운로드)")
+print("⏳ Whisper STT 엔진(Large-v3) 로딩 중... (약 3GB)")
+# GPU 없이 CPU만 사용할 때 (32GB RAM 환경)
+stt_model = WhisperModel("large-v3", device="cpu", compute_type="int8")
+# stt_model = WhisperModel("large-v3", device="cuda", compute_type="int8")
+
 print("✅ 엔진 준비 완료")
 
 # 2. 공통 검색 로직
