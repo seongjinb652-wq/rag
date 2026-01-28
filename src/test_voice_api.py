@@ -11,7 +11,7 @@ def test_voice(file_path):
         
     if response.status_code == 200:
         res = response.json()
-        print(f"🎙️ 인식된 텍스트: {res['original_voice_text']}")
+        print(f"🎙️ 인식된 텍스트: {res['original_text']}")
         print(f"🔍 교정된 쿼리: {res['refined_query']}")
         print(f"🤖 답변: {res['answer'][:100]}...") # 답변이 길 수 있어 앞부분만 출력
         print(f"📂 출처: {res['sources']}")
