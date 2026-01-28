@@ -40,49 +40,50 @@ print("✅ 엔진 준비 완료")
 
 # 2. 공통 검색 로직
 def perform_rag_search(query: str):
-    # alias_map.py에 정의된 중복 방지 로직 사용
     refined_query = clean_and_refine(query)
-    
     print(f"🔍 [최종 교정 쿼리]: {refined_query}")
     
-    # 검색 (k=5)
     docs = vector_db.similarity_search(refined_query, k=5)
     
     context_list = []
     sources = []
-    
-    # 기준이 되는 상위 폴더 이름
     root_folder_name = "@@@인도네시아PDT암센터FS"
     
     for d in docs:
         content = d.page_content
         
-        # 본문 내에 "Source:" 문구가 있는 경우 (TXT 변환 데이터 특성 반영)
-        if content.startswith("Source:"):
-            lines = content.split('\n', 1)
-            full_path = lines[0].replace("Source:", "").strip()
+        # 1. 본문 안에 "Source:"라는 단어가 포함되어 있는지 확인
+        if "Source:" in content:
+            # Source: 로 시작하는 줄을 정확히 찾아냄
+            lines = content.split('\n')
+            source_line = ""
+            actual_body = []
             
-            # 경로 간소화: root_folder_name 이후만 남기기
-            if root_folder_name in full_path:
-                # 폴더명 이후부터 잘라내고, 맨 앞의 슬래시 제거
-                display_path = full_path.split(root_folder_name)[-1].lstrip('\\')
-            else:
-                # 폴더명이 없으면 파일명만 추출
-                display_path = os.path.basename(full_path)
+            for line in lines:
+                if line.startswith("Source:"):
+                    source_line = line.replace("Source:", "").strip()
+                elif line.strip() == "---": # 절취선 제외
+                    continue
+                else:
+                    actual_body.append(line)
             
-            sources.append(display_path)
-            # 답변 생성을 위한 문맥에서는 'Source:' 줄을 제외하고 본문만 사용
-            context_list.append(lines[1] if len(lines) > 1 else "")
+            # 경로 간소화 처리
+            if source_line:
+                if root_folder_name in source_line:
+                    display_path = source_line.split(root_folder_name)[-1].lstrip('\\')
+                else:
+                    display_path = os.path.basename(source_line)
+                sources.append(display_path)
+            
+            context_list.append("\n".join(actual_body))
         else:
-            # 기존 메타데이터 방식인 경우
+            # Source 문구가 아예 없는 경우 기존 메타데이터 참조
             context_list.append(content)
             sources.append(d.metadata.get("source", "알 수 없음"))
     
-    # 중복 제거 및 문맥 통합
-    sources = list(set(sources))
+    sources = list(set([s for s in sources if s])) # 빈 값 제외 및 중복 제거
     context = "\n".join(context_list)
     
-    # 답변 생성
     prompt = f"다음 문맥을 바탕으로 질문에 정확히 답하세요:\n\n{context}\n\n질문: {refined_query}"
     response = llm.invoke(prompt)
     
@@ -92,7 +93,6 @@ def perform_rag_search(query: str):
         "answer": response.content,
         "sources": sources
     }
-
 # 3. API 엔드포인트
 class ChatRequest(BaseModel):
     message: str
