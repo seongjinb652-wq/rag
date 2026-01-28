@@ -67,20 +67,30 @@ def initialize_and_load():
                 print(f"❌ 오류 ({file_path.name}): {e}")
 
         # DB에 데이터 추가
+        # DB에 데이터 추가 (이 부분을 수정합니다)
         if texts:
-            if vector_db is None:
-                vector_db = Chroma.from_texts(
-                    texts=texts,
-                    embedding=embeddings,
-                    metadatas=metadatas,
-                    persist_directory=DB_PATH,
-                    collection_name=COLLECTION_NAME
-                )
-            else:
-                vector_db.add_texts(texts=texts, metadatas=metadatas)
+            # --- 수정 시작: OpenAI 토큰 제한(300k)을 피하기 위해 텍스트 리스트를 한 번 더 쪼갬 ---
+            text_batch_limit = 100  # 한 번에 보낼 청크 개수 제한 (약 10만 토큰 내외 안전권)
+            for j in range(0, len(texts), text_batch_limit):
+                sub_texts = texts[j : j + text_batch_limit]
+                sub_metadatas = metadatas[j : j + text_batch_limit]
                 
-            vector_db.persist()  # 0.4.x 버전에서 데이터를 디스크에 즉시 쓰도록 강제함
+                if vector_db is None:
+                    vector_db = Chroma.from_texts(
+                        texts=sub_texts,
+                        embedding=embeddings,
+                        metadatas=sub_metadatas,
+                        persist_directory=DB_PATH,
+                        collection_name=COLLECTION_NAME
+                    )
+                else:
+                    vector_db.add_texts(texts=sub_texts, metadatas=sub_metadatas)
+            
+            vector_db.persist() # 0.4.x 버전에서 데이터를 디스크에 즉시 쓰도록 강제함
+            # --- 수정 끝 ---
+            
             print(f"✅ 배치 완료: {min(i + batch_size, len(all_files))} / {len(all_files)}")
+
 
     print(f"🏁 DB 구축 완료! 위치: {DB_PATH}")
 
