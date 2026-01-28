@@ -30,15 +30,15 @@ alias_map = {
     "연면적": "면적", "gfa": "면적", "평수": "면적", "헤베": "면적"
 }
 
-# 2. 음성 발음 오차 보정 사전
+# 2. 음성 발음 오차 보정 사전 (Whisper가 못잡는 것만 추가)
 VOICE_CORRECTION = {
-    #"옆면적": "연면적",
-    #"이노가": "인허가",
+    "옆면적": "연면적",
+    "이노가": "인허가",
 }
 
 def clean_and_refine(query):
     """
-    발음 보정 -> 소문화 -> 도메인 매핑 -> 공백 정리 순으로 처리
+    발음 보정 -> 소문자화 -> 도메인 매핑(중복방지) -> 공백 정리 순으로 처리
     """
     # Step 1: 음성 발음 보정
     for wrong, right in VOICE_CORRECTION.items():
@@ -46,11 +46,19 @@ def clean_and_refine(query):
         
     query = query.lower().strip()
     
-    # Step 2: 도메인 사전 매핑 (긴 단어 우선)
+    # Step 2: 도메인 사전 매핑 (긴 단어 우선순위 정렬)
     sorted_keys = sorted(alias_map.keys(), key=len, reverse=True)
+    
     for key in sorted_keys:
-        if key.lower() in query:
-            query = query.replace(key.lower(), alias_map[key])
+        target_key = key.lower()
+        replacement = alias_map[key]
+        
+        # [중요] 이미 교정된 단어가 문장에 포함되어 있다면 중복 교정 건너뜀
+        if replacement and replacement in query:
+            continue
+            
+        if target_key in query:
+            query = query.replace(target_key, replacement)
             
     # Step 3: 중복 공백 제거
     return " ".join(query.split())
