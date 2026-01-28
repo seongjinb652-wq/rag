@@ -8,6 +8,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 # from langchain_chroma import Chroma
 from dotenv import load_dotenv # .env 로드 함수
+import time  # 상단에 추가
 
 # .env 파일 로드
 load_dotenv() 
@@ -68,26 +69,38 @@ def initialize_and_load():
 
         # DB에 데이터 추가
         # DB에 데이터 추가 (이 부분을 수정합니다)
+        import time  # 상단에 추가
+
+# ... 중략 ...
+
         if texts:
-            # --- 수정 시작: OpenAI 토큰 제한(300k)을 피하기 위해 텍스트 리스트를 한 번 더 쪼갬 ---
-            text_batch_limit = 100  # 한 번에 보낼 청크 개수 제한 (약 10만 토큰 내외 안전권)
+            text_batch_limit = 100 
             for j in range(0, len(texts), text_batch_limit):
                 sub_texts = texts[j : j + text_batch_limit]
                 sub_metadatas = metadatas[j : j + text_batch_limit]
                 
-                if vector_db is None:
-                    vector_db = Chroma.from_texts(
-                        texts=sub_texts,
-                        embedding=embeddings,
-                        metadatas=sub_metadatas,
-                        persist_directory=DB_PATH,
-                        collection_name=COLLECTION_NAME
-                    )
-                else:
-                    vector_db.add_texts(texts=sub_texts, metadatas=sub_metadatas)
-            
-            vector_db.persist() # 0.4.x 버전에서 데이터를 디스크에 즉시 쓰도록 강제함
-            # --- 수정 끝 ---
+                # --- 수정 부분 시작: 재시도 로직과 휴식 ---
+                try:
+                    if vector_db is None:
+                        vector_db = Chroma.from_texts(
+                            texts=sub_texts,
+                            embedding=embeddings,
+                            metadatas=sub_metadatas,
+                            persist_directory=DB_PATH,
+                            collection_name=COLLECTION_NAME
+                        )
+                    else:
+                        vector_db.add_texts(texts=sub_texts, metadatas=sub_metadatas)
+                    
+                    # 1분당 100만 토큰 제한을 피하기 위해 배치가 끝날 때마다 짧게 휴식
+                    time.sleep(0.5)  # 0.5초만 쉬어도 RPM/TPM 관리에 큰 도움이 됩니다.
+
+                except Exception as e:
+                    if "429" in str(e):
+                        print("⏳ 속도 제한(429) 감지. 10초간 대기 후 다시 시도합니다...")
+                        time.sleep(10)
+                        # 여기서 한 번 더 시도하거나 다음 배치로 넘어가게 처리 가능
+                # --- 수정 부분 끝 ---
             
             print(f"✅ 배치 완료: {min(i + batch_size, len(all_files))} / {len(all_files)}")
 
