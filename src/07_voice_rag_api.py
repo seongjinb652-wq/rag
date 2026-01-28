@@ -1,21 +1,20 @@
 import os
 import uvicorn
+import io
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from faster_whisper import WhisperModel
-import io
 
 from alias_map import clean_and_refine
 
-# 1. 초기화
+# 1. 초기화 및 설정
 DB_PATH = "./chroma_db"
 COLLECTION_NAME = "project_docs"
-app = FastAPI(title="Voice/Text Hybrid RAG API")
+app = FastAPI(title="FS Voice RAG System (Medium)")
 
-# CORS 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,7 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# RAG 엔진 & Whisper 모델 로드 (서버 시작 시 한 번만)
+# RAG 컴포넌트 로드
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 vector_db = Chroma(
     persist_directory=DB_PATH,
@@ -32,55 +31,51 @@ vector_db = Chroma(
 )
 llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
-# Whisper 모델 로드 (CPU 최적화 버전)
-print("⏳ Whisper STT 엔진 로딩 중...")
-stt_model = WhisperModel("base", device="cpu", compute_type="int8")
+# Whisper Medium 모델 로드 (인식률 대폭 향상)
+print("⏳ Whisper STT 엔진(Medium) 로딩 중... (최초 실행 시 다운로드)")
+stt_model = WhisperModel("medium", device="cpu", compute_type="int8")
 print("✅ 엔진 준비 완료")
 
-# 2. 데이터 모델
-class ChatRequest(BaseModel):
-    message: str
-
-# 3. 비즈니스 로직 (공통 검색 함수)
+# 2. 공통 검색 로직
 def perform_rag_search(query: str):
     refined_query = clean_and_refine(query)
+    
+    # 검색 (k=5)
     docs = vector_db.similarity_search(refined_query, k=5)
     context = "\n".join([d.page_content for d in docs])
     sources = list(set([d.metadata.get("source", "알 수 없음") for d in docs]))
     
-    prompt = f"다음 문맥을 바탕으로 질문에 답하세요:\n\n{context}\n\n질문: {refined_query}"
+    # 답변 생성
+    prompt = f"다음 문맥을 바탕으로 질문에 정확히 답하세요:\n\n{context}\n\n질문: {refined_query}"
     response = llm.invoke(prompt)
     
     return {
+        "original_text": query,
         "refined_query": refined_query,
         "answer": response.content,
         "sources": sources
     }
 
-# 4. 엔드포인트: 텍스트 질의
+# 3. API 엔드포인트
+class ChatRequest(BaseModel):
+    message: str
+
 @app.post("/chat")
-async def chat_endpoint(request: ChatRequest):
+async def chat_text(request: ChatRequest):
     return perform_rag_search(request.message)
 
-# 5. 엔드포인트: 음성 질의 (Audio -> STT -> RAG)
 @app.post("/voice")
-async def voice_endpoint(file: UploadFile = File(...)):
+async def chat_voice(file: UploadFile = File(...)):
     try:
-        # 오디오 파일 메모리로 읽기
         audio_bytes = await file.read()
         audio_file = io.BytesIO(audio_bytes)
         
-        # STT 변환 (한국어 지정)
+        # Whisper 변환
         segments, info = stt_model.transcribe(audio_file, beam_size=5, language="ko")
         voice_text = " ".join([segment.text for segment in segments])
         
-        print(f"🎙️ 인식된 음성: {voice_text}")
-        
-        # RAG 검색 실행
-        result = perform_rag_search(voice_text)
-        result["original_voice_text"] = voice_text
-        
-        return result
+        print(f"🎙️ [STT 인식]: {voice_text}")
+        return perform_rag_search(voice_text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
