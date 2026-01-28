@@ -47,8 +47,40 @@ def perform_rag_search(query: str):
     
     # 검색 (k=5)
     docs = vector_db.similarity_search(refined_query, k=5)
-    context = "\n".join([d.page_content for d in docs])
-    sources = list(set([d.metadata.get("source", "알 수 없음") for d in docs]))
+    
+    context_list = []
+    sources = []
+    
+    # 기준이 되는 상위 폴더 이름
+    root_folder_name = "@@@인도네시아PDT암센터FS"
+    
+    for d in docs:
+        content = d.page_content
+        
+        # 본문 내에 "Source:" 문구가 있는 경우 (TXT 변환 데이터 특성 반영)
+        if content.startswith("Source:"):
+            lines = content.split('\n', 1)
+            full_path = lines[0].replace("Source:", "").strip()
+            
+            # 경로 간소화: root_folder_name 이후만 남기기
+            if root_folder_name in full_path:
+                # 폴더명 이후부터 잘라내고, 맨 앞의 슬래시 제거
+                display_path = full_path.split(root_folder_name)[-1].lstrip('\\')
+            else:
+                # 폴더명이 없으면 파일명만 추출
+                display_path = os.path.basename(full_path)
+            
+            sources.append(display_path)
+            # 답변 생성을 위한 문맥에서는 'Source:' 줄을 제외하고 본문만 사용
+            context_list.append(lines[1] if len(lines) > 1 else "")
+        else:
+            # 기존 메타데이터 방식인 경우
+            context_list.append(content)
+            sources.append(d.metadata.get("source", "알 수 없음"))
+    
+    # 중복 제거 및 문맥 통합
+    sources = list(set(sources))
+    context = "\n".join(context_list)
     
     # 답변 생성
     prompt = f"다음 문맥을 바탕으로 질문에 정확히 답하세요:\n\n{context}\n\n질문: {refined_query}"
