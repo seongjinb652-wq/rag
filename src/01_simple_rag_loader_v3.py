@@ -69,9 +69,8 @@ def initialize_and_load():
 
         # DB에 데이터 추가
         # DB에 데이터 추가 (이 부분을 수정합니다)
-        import time  # 상단에 추가
 
-# ... 중략 ...
+        # ... 중략 ...
 
         if texts:
             text_batch_limit = 100 
