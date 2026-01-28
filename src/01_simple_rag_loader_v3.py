@@ -49,7 +49,7 @@ def initialize_and_load():
     vector_db = None
 
     # 4. 배치 처리 (메모리 효율화)
-    batch_size = 20 
+    batch_size = 5 
     for i in range(0, len(all_files), batch_size):
         batch_files = all_files[i : i + batch_size]
         texts = []
