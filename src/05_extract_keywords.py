@@ -5,6 +5,7 @@ from kiwipiepy import Kiwi
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
+import chromadb
 
 # .env 로드
 load_dotenv()
@@ -20,12 +21,15 @@ def extract_keywords():
     # 1. 형태소 분석기(Kiwi) 초기화
     kiwi = Kiwi()
     
-    # 2. DB 연결 (기존 데이터 로드)
+    # 2. DB 연결 (Chroma 클라이언트를 직접 생성해서 전달하는 방식이 더 안전합니다)
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    # 이 부분을 수정: 기본 임베딩 설정을 건너뛰도록 직접 클라이언트 연결
+    client = chromadb.PersistentClient(path=DB_PATH)
+    
     vector_db = Chroma(
-        persist_directory=DB_PATH,
-        embedding_function=embeddings,
-        collection_name=COLLECTION_NAME
+        client=client,
+        collection_name=COLLECTION_NAME,
+        embedding_function=embeddings
     )
     
     # 3. 데이터 총 개수 확인
