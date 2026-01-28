@@ -8,6 +8,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from faster_whisper import WhisperModel
 
+# 외부 사전 파일에서 함수 로드
 from alias_map import clean_and_refine
 
 # 1. 초기화 및 설정
@@ -31,18 +32,18 @@ vector_db = Chroma(
 )
 llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
-# Whisper Medium 모델 로드 (인식률 대폭 향상)
-# print("⏳ Whisper STT 엔진(Medium) 로딩 중... (최초 실행 시 다운로드)")
+# Whisper Large-v3 모델 로드 (i7-14700 / 32GB RAM 최적화)
 print("⏳ Whisper STT 엔진(Large-v3) 로딩 중... (약 3GB)")
-# GPU 없이 CPU만 사용할 때 (32GB RAM 환경)
 stt_model = WhisperModel("large-v3", device="cpu", compute_type="int8")
-# stt_model = WhisperModel("large-v3", device="cuda", compute_type="int8")
 
 print("✅ 엔진 준비 완료")
 
 # 2. 공통 검색 로직
 def perform_rag_search(query: str):
+    # alias_map.py에 정의된 중복 방지 로직 사용
     refined_query = clean_and_refine(query)
+    
+    print(f"🔍 [최종 교정 쿼리]: {refined_query}")
     
     # 검색 (k=5)
     docs = vector_db.similarity_search(refined_query, k=5)
@@ -74,13 +75,14 @@ async def chat_voice(file: UploadFile = File(...)):
         audio_bytes = await file.read()
         audio_file = io.BytesIO(audio_bytes)
         
-        # Whisper 변환
+        # Whisper 변환 (large-v3)
         segments, info = stt_model.transcribe(audio_file, beam_size=5, language="ko")
         voice_text = " ".join([segment.text for segment in segments])
         
         print(f"🎙️ [STT 인식]: {voice_text}")
         return perform_rag_search(voice_text)
     except Exception as e:
+        print(f"❌ 에러 발생: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
