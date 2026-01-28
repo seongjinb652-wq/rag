@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from alias_map import refine_text  # 아까 만든 교정 함수
+from alias_map import clean_and_refine  # 아까 만든 교정 함수
 
 # 1. 설정 및 초기화
 DB_PATH = "./chroma_db"
@@ -38,8 +38,8 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
     try:
-        # A. 질의 정제 (alias_map 적용)
-        refined_query = refine_text(request.message)
+        # A. 질의 정제 (함수명 변경 적용)
+        refined_query = clean_and_refine(request.message)
         
         # B. 문서 검색 (유사도 높은 5개 유닛 추출)
         # 출처 정보를 같이 가져오기 위해 직접 검색
