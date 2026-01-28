@@ -85,5 +85,7 @@ async def chat_voice(file: UploadFile = File(...)):
         print(f"❌ 에러 발생: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # workers=1을 지정하여 프로세스가 꼬이는 것을 방지합니다.
+    uvicorn.run(app, host="0.0.0.0", port=8000, workers=1)
