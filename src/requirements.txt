@@ -4,23 +4,23 @@ pydantic==2.10.6
 urllib3<2.1
 requests==2.32.5
 
-# OpenAI 및 LangChain 핵심
+# OpenAI 및 LangChain 핵심 (충돌 해결 버전)
 langchain==0.1.15
 langchain-community==0.0.32
 langchain-openai==0.1.3
 langchain-core==0.1.53
 langchain-text-splitters==0.0.1
-openai==1.6.1
+openai>=1.10.0
 
 # 벡터 DB
 chromadb==0.4.24
 langchain-chroma==0.1.0
 
-# --- 신규 추가: 데이터 분석 및 전처리 (Kiwi 고정) ---
+# 데이터 분석 및 전처리 (Kiwi 고정)
 kiwipiepy==0.17.0
 pandas==2.0.3
 tqdm==4.66.1
 
-# --- 신규 추가: 향후 UI 및 API 확장용 ---
+# 향후 UI 및 API 확장용
 fastapi==0.128.0
 uvicorn==0.40.0
