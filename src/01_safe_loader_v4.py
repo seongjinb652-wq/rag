@@ -53,22 +53,25 @@ def process_and_save():
             
             for doc in raw_docs:
                 if "Source:" in doc.page_content:
-                    content_lines = doc.page_content.split('\n')
-                    # 1. 첫 줄에서 "Source: " 제거 및 경로 분리
-                    source_line = content_lines[0].replace("Source:", "").strip()
+                    lines = doc.page_content.split('\n')
+                    # 1. 첫 줄에서 "Source:" 문구 제거
+                    full_source_path = lines[0].replace("Source:", "").strip()
                     
-                    # 2. 경로에서 실제 파일명(.pdf 포함)만 추출
-                    # [수정] os.path.basename을 사용하여 끝단 파일명만 가져옴
-                    original_full_name = os.path.basename(source_line)
+                    # 2. [OS 통합 대응] 윈도우(\)든 맥(/)이든 모두 슬래시(/)로 통일
+                    unified_path = full_source_path.replace('\\', '/')
                     
-                    # 3. 본문에서 첫 줄과 구분선(---) 제거 (깔끔한 본문 유지)
-                    # 통상 Source줄 다음줄은 구분선이므로 2번째 줄부터 합침
-                    doc.page_content = "\n".join(content_lines[2:]).strip()
+                    # 3. 마지막 슬래시 뒤의 파일명 전체 추출 (확장자 포함)
+                    original_name = unified_path.split('/')[-1]
+                    
+                    # 4. 본문 정제: 첫 줄(Source)과 구분선(---) 제거
+                    # 데이터 확인 결과 Source 다음 줄에 점선이 있으므로 2번째 줄부터 본문 취급
+                    doc.page_content = "\n".join(lines[2:]).strip()
                 else:
-                    original_full_name = file_name # Source 문구 없을 시 예외처리
+                    # Source 문구가 없을 경우 텍스트 파일명에서 해시 제거 후 사용
+                    original_name = file_name.rsplit('_', 1)[0]
                 
-                # 4. 메타데이터에 진짜 .pdf 파일명 주입
-                doc.metadata[Settings.META_SOURCE_KEY] = original_full_name
+                # 메타데이터 주입
+                doc.metadata[Settings.META_SOURCE_KEY] = original_name
             
             # 청크 분할 및 저장
             final_chunks = text_splitter.split_documents(raw_docs)
