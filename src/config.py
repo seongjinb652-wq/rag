@@ -47,7 +47,11 @@ class Settings:
         """필요한 디렉토리 생성"""
         for dir_path in [Settings.DATA_DIR, Settings.LOGS_DIR, Settings.DOWNLOADS_DIR]:
             dir_path.mkdir(parents=True, exist_ok=True)
-    
+
+    # ========================
+    # [추가] DB 처리 모드: True면 초기화(v3), False면 이어넣기(v4)
+    # ========================
+    RESET_DB = False
     # ========================
     # 문서 처리 설정 (1000/150 확정)
     # ========================
