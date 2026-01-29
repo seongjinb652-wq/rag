@@ -104,11 +104,36 @@ def process_and_save():
                 original_name = file_name.rsplit('_', 1)[0]
                 content_body = full_content
 
-            # 청크 생성
+           # 1. 청크 생성 
             chunks = text_splitter.split_text(content_body)
             num_chunks = len(chunks)
             metadatas = [{Settings.META_SOURCE_KEY: original_name} for _ in range(num_chunks)]
 
+            # 2. [수정] 청크 단위 분할 적재 루프 (안정성 강화)
+            # 파일이 아무리 커도 100개 청크씩 끊어서 전송합니다.
+            chunk_batch_size = 100 
+            
+            for i in range(0, num_chunks, chunk_batch_size):
+                batch_chunks = chunks[i : i + chunk_batch_size]
+                batch_metadatas = metadatas[i : i + chunk_batch_size]
+                
+                success = False
+                while not success:
+                    try:
+                        # 전체 chunks가 아니라 batch_chunks를 보냅니다.
+                        vector_db.add_texts(texts=batch_chunks, metadatas=batch_metadatas)
+                        time.sleep(Settings.SLEEP_INTERVAL) # 설정값 (0.1 등)
+                        success = True
+                    except Exception as e:
+                        if "429" in str(e) or "Rate limit" in str(e):
+                            print(f"\n[{now_time}] ⏳ [Rate Limit] 10초 대기 중... ({idx}/{total_files})")
+                            time.sleep(10)
+                        elif "max_tokens" in str(e):
+                            # 만약 50개도 너무 크다면 (극단적인 경우) 더 쪼개거나 건너뜀
+                            print(f"\n[{now_time}] ⚠️ [Token Limit] 청크 사이즈 조정이 필요할 수 있습니다.")
+                            break
+                        else:
+                            raise e
             # [안정성 적재 루프] Rate Limit 대응
             success = False
             while not success:
