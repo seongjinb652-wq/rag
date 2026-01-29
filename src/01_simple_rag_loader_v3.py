@@ -1,110 +1,67 @@
-# (단락보존 + 키워드 가중치형 + 메모리 초기화 + .env 로드)
-import os
+# (단락보존 + 키워드 가중치형 + 메모리 초기화 + .env 로드)import os
 import shutil
-import logging
-from pathlib import Path
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain_chroma import Chroma
-from dotenv import load_dotenv # .env 로드 함수
-import time  # 상단에 추가
+from langchain_community.document_loaders import TextLoader
+from config import Settings  # 중앙 설정 참조
 
-# .env 파일 로드
-load_dotenv() 
+def process_and_save():
+    # 1. DB 및 모델 설정 (기존 값 주석 보존)
+    # DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
+    db_path = str(Settings.CHROMA_DB_PATH)
+    # COLLECTION_NAME = "indonesia_pdt_docs"
+    collection_name = Settings.CHROMA_COLLECTION_NAME
+    # embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = OpenAIEmbeddings(model=Settings.EMBEDDING_MODEL)
 
-# 이제 os.getenv를 통해 안전하게 가져옵니다.
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    # [v3 원칙: 초기화] 기존 DB 폴더가 있다면 삭제하여 깨끗하게 시작
+    if os.path.exists(db_path):
+        print(f"🗑️ 기존 DB 초기화 중... ({db_path})")
+        shutil.rmtree(db_path)
 
-# 확인용 (키의 앞 5자리만 출력해서 잘 가져왔는지 체크)
-if OPENAI_API_KEY:
-    print(f"🔑 API KEY 로드 성공: {OPENAI_API_KEY[:5]}*****")
-else:
-    print("❌ .env 파일에서 OPENAI_API_KEY를 찾을 수 없습니다.")
-
-
-# 경로 및 설정
-TXT_DIR = Path(r"C:/Users/USER/rag/src/data/text_converted")
-DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
-COLLECTION_NAME = "indonesia_pdt_docs"
-
-def initialize_and_load():
-    # 1. DB 초기화
-    if os.path.exists(DB_PATH):
-        print(f"🗑️ 기존 DB 삭제 및 초기화: {DB_PATH}")
-        shutil.rmtree(DB_PATH)
-
-    # 2. 모델 및 스플리터 설정
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small") # 가성비 좋은 최신 모델
+    # 2. 텍스트 분할 설정 (기존 값 주석 보존)
+    # text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, 
-        chunk_overlap=150,
-        separators=["\n\n", "\n", " ", ""]
+        chunk_size=Settings.CHUNK_SIZE,
+        chunk_overlap=Settings.CHUNK_OVERLAP
     )
 
-    # 3. 파일 목록
-    all_files = list(TXT_DIR.glob("*.txt"))
-    print(f"🚀 총 {len(all_files)}개 파일 DB 적재 시작...")
+    # 3. 신규 벡터 DB 생성
+    vector_db = Chroma(
+        persist_directory=db_path,
+        embedding_function=embeddings,
+        collection_name=collection_name
+    )
 
-    # 초기 DB 생성
-    vector_db = None
+    # 4. 작업 대상 파일 목록
+    input_dir = Settings.DATA_DIR / "text_converted"
+    all_files = [f for f in os.listdir(input_dir) if f.endswith(".txt")]
+    
+    print(f"🚀 총 {len(all_files)}개 파일 적재 시작 (초기화 모드)")
 
-    # 4. 배치 처리 (메모리 효율화)
-    batch_size = 15 
-    for i in range(0, len(all_files), batch_size):
-        batch_files = all_files[i : i + batch_size]
-        texts = []
-        metadatas = []
-
-        for file_path in batch_files:
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-                    chunks = text_splitter.split_text(content)
-                    for chunk in chunks:
-                        texts.append(chunk)
-                        metadatas.append({"source": file_path.name})
-            except Exception as e:
-                print(f"❌ 오류 ({file_path.name}): {e}")
-
-        # DB에 데이터 추가
-        # DB에 데이터 추가 (이 부분을 수정합니다)
-
-        # ... 중략 ...
-
-        if texts:
-            text_batch_limit = 100 
-            for j in range(0, len(texts), text_batch_limit):
-                sub_texts = texts[j : j + text_batch_limit]
-                sub_metadatas = metadatas[j : j + text_batch_limit]
-                
-                # --- 수정 부분 시작: 재시도 로직과 휴식 ---
-                try:
-                    if vector_db is None:
-                        vector_db = Chroma.from_texts(
-                            texts=sub_texts,
-                            embedding=embeddings,
-                            metadatas=sub_metadatas,
-                            persist_directory=DB_PATH,
-                            collection_name=COLLECTION_NAME
-                        )
-                    else:
-                        vector_db.add_texts(texts=sub_texts, metadatas=sub_metadatas)
-                    
-                    # 1분당 100만 토큰 제한을 피하기 위해 배치가 끝날 때마다 짧게 휴식
-                    time.sleep(0.5)  # 0.5초만 쉬어도 RPM/TPM 관리에 큰 도움이 됩니다.
-
-                except Exception as e:
-                    if "429" in str(e):
-                        print("⏳ 속도 제한(429) 감지. 10초간 대기 후 다시 시도합니다...")
-                        time.sleep(10)
-                        # 여기서 한 번 더 시도하거나 다음 배치로 넘어가게 처리 가능
-                # --- 수정 부분 끝 ---
+    for file_name in all_files:
+        file_path = os.path.join(input_dir, file_name)
+        try:
+            loader = TextLoader(file_path, encoding='utf-8')
+            raw_docs = loader.load()
             
-            print(f"✅ 배치 완료: {min(i + batch_size, len(all_files))} / {len(all_files)}")
+            # [지시사항] 본문 Source 제거 및 메타데이터 이관
+            for doc in raw_docs:
+                if "Source:" in doc.page_content:
+                    content_lines = doc.page_content.split('\n')
+                    doc.page_content = "\n".join(content_lines[1:]).strip()
+                
+                # doc.metadata["source"] = file_path
+                doc.metadata[Settings.META_SOURCE_KEY] = file_path
+            
+            # 청크 분할 및 적재
+            final_chunks = text_splitter.split_documents(raw_docs)
+            vector_db.add_documents(final_chunks)
+            print(f"✅ 적재 완료: {file_name}")
 
-
-    print(f"🏁 DB 구축 완료! 위치: {DB_PATH}")
+        except Exception as e:
+            print(f"❌ 오류 발생 ({file_name}): {e}")
 
 if __name__ == "__main__":
-    initialize_and_load()
+    process_and_save()
