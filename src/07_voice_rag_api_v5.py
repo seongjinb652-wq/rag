@@ -58,11 +58,16 @@ def perform_rag_search(query: str):
     
     for d in docs:
         context_list.append(d.page_content)
-        # v5 표준: META_SOURCE_KEY("source")에서 경로 추출
-        # raw_src = d.metadata.get("source", "알 수 없음")
         raw_src = d.metadata.get(Settings.META_SOURCE_KEY, "알 수 없음")
-        sources.append(os.path.basename(raw_src))
-    
+              
+        fname = os.path.basename(raw_src)
+        if "_" in fname and fname.endswith(".txt"):       # [수정] .txt 및 해시값 제거하여 원본 파일명 복원 # 뒤에서부터 첫 번째 '_'를 찾아 그 앞부분만 남김 (해시 제거)
+            clean_name = fname.rsplit('_', 1)[0]
+            sources.append(clean_name)
+        else:
+            sources.append(fname.replace(".txt", ""))
+
+   
     sources = sorted(list(set(sources)))
     context = "\n\n".join(context_list)
     
