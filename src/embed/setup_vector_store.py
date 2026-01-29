@@ -1,25 +1,39 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+# setup_vector_store.py
 """
 벡터 임베딩 + Chroma DB 저장
 목표: 텍스트를 벡터로 변환 후 Chroma DB에 저장
 
 기능:
-- 한국어 최적화 임베딩 (Ko-SBERT)
+- 한국어 최적화 임베딩 (Ko-SBERT 변경됨. )
 - Chroma DB 초기화
 - 문서 추가 및 검색
 - 벡터 유사도 계산
 
 실행: python setup_vector_store.py
 """
-
 import os
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
+from config import Settings  # 원칙 1: config 하나만 참조
 import sys
 from pathlib import Path
-from typing import List, Dict, Tuple
+# from typing import List, Dict, Tuple
 import logging
 import json
+
+# 원칙 2 : 개별 선언 최소화 (Settings 값 직접 사용)
+EMBEDDING_MODEL = Settings.EMBEDDING_MODEL
+DB_PATH = str(Settings.CHROMA_DB_PATH)
+COLLECTION_NAME = Settings.CHROMA_COLLECTION_NAME
+
+# 원칙 3 : 임베딩 엔진 생성 (파일 분리 없이 직접 선언하여 직관성 확보)
+embeddings = HuggingFaceEmbeddings(
+    model_name=EMBEDDING_MODEL,
+    model_kwargs={'device': 'cpu'}
+)
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,14 +63,13 @@ class VectorStore:
     def __init__(self):
         """초기화"""
         import chromadb
-        from sentence_transformers import SentenceTransformer
+        # from sentence_transformers import SentenceTransformer
         
         logger.info("🔧 벡터 저장소 초기화 중...")
         
         # Chroma DB 초기화
         self.db_path = str(Settings.CHROMA_DB_PATH)
         Settings.CHROMA_DB_PATH.mkdir(parents=True, exist_ok=True)
-        
         self.client = chromadb.PersistentClient(path=self.db_path)
         
         # 기존 컬렉션이 있으면 삭제 후 재생성 (테스트 모드)
@@ -76,8 +89,10 @@ class VectorStore:
         
         # 임베딩 모델 로드
         logger.info("🤖 임베딩 모델 로드 중...")
-        self.model = SentenceTransformer(Settings.EMBEDDING_MODEL)
+        # self.model = SentenceTransformer(Settings.EMBEDDING_MODEL)
+        self.embedding_engine = embeddings
         logger.info(f"✅ 모델 로드: {Settings.EMBEDDING_MODEL}")
+        # logger.info(f"✅ 상단 선언 임베딩 엔진(Settings) 연결 완료")
         
         self.doc_count = 0
     
@@ -112,12 +127,14 @@ class VectorStore:
                     continue
                 
                 # 임베딩 생성
-                embedding = self.model.encode(text, convert_to_numpy=True)
+                # embedding = self.model.encode(text, convert_to_numpy=True) # openai query_embedding 사용시 방법.
+                embedding = self.embedding_engine.embed_query(text)
                 
                 doc_id = f"doc_{self.doc_count}_{idx}"
                 ids.append(doc_id)
                 texts.append(text)
-                embeddings.append(embedding.tolist())
+                # embeddings.append(embedding.tolist()) # openai query_embedding 사용시 방법.
+                embeddings.append(embedding)
                 metadatas.append({
                     'source': source,
                     'length': len(text)
@@ -154,11 +171,13 @@ class VectorStore:
         
         try:
             # 쿼리 임베딩
-            query_embedding = self.model.encode(query, convert_to_numpy=True)
+            # query_embedding = self.model.encode(query, convert_to_numpy=True) # openai query_embedding 사용시 방법.
+            query_embedding = self.embedding_engine.embed_query(query)
             
             # 유사 문서 검색
             results = self.collection.query(
-                query_embeddings=[query_embedding.tolist()],
+                #query_embeddings=[query_embedding.tolist()],# openai query_embedding 사용시 방법.
+                query_embeddings=[query_embedding],
                 n_results=n_results
             )
             
