@@ -96,7 +96,7 @@ class Settings:
     # EMBEDDING_MODEL = "text-embedding-3-small"    # $0.00002 ( 1k 약 27원)    2.3G 기준 2~3만원 2026.1 기준. 10억 토큰 
     # EMBEDDING_DIMENSION = 1536                    # 
     # EMBEDDING_MODEL = "text-embedding-3-large"  # 0.00013     2.3G 기준 15~16만원 2026.1 기준.
-    # EMBEDDING_DIMENSION = 3072                  # 
+    # EMBEDDING_DIMENSION = 3072                  # 특이사항차원 축소 가능3072를 1024나 1536으로 줄여도 성능 하락이 적음
     
     # ========================
     # 벡터 DB 설정 (Day 3+ 핵심)
