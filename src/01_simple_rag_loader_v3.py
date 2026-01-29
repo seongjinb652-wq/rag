@@ -1,4 +1,5 @@
 # (단락보존 + 키워드 가중치형 + 메모리 초기화 + .env 로드)import os
+import os
 import shutil
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
