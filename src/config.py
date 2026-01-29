@@ -58,7 +58,7 @@ class Settings:
     CHUNK_SIZE = 1000       
     CHUNK_OVERLAP = 150     
     SUPPORTED_FORMATS = {'.pdf', '.pptx', '.docx', '.txt', '.png', '.jpg', '.jpeg'}
-    
+    SLEEP_INTERVAL = 0.1  # 원하는 대기 시간 설정
     # ========================
     # 임베딩 설정 (1536차원 확정)
     # ========================
