@@ -110,8 +110,8 @@ def process_and_save():
             metadatas = [{Settings.META_SOURCE_KEY: original_name} for _ in range(num_chunks)]
 
             # 2. [수정] 청크 단위 분할 적재 루프 (안정성 강화)
-            # 파일이 아무리 커도 100개 청크씩 끊어서 전송합니다.
-            chunk_batch_size = 100 
+            # 파일이 아무리 커도 50개 청크씩 끊어서 전송합니다.
+            chunk_batch_size = 50 
             
             for i in range(0, num_chunks, chunk_batch_size):
                 batch_chunks = chunks[i : i + chunk_batch_size]
