@@ -80,8 +80,23 @@ class Settings:
     # EMBEDDING_DIMENSION = 768
 
     # 현재 2.3GB DB를 생성한 실제 모델 (384차원)
-    EMBEDDING_MODEL = 'paraphrase-multilingual-MiniLM-L12-v2'
-    EMBEDDING_DIMENSION = 384  # 모델에 맞춰 수정
+    # EMBEDDING_MODEL = 'paraphrase-multilingual-MiniLM-L12-v2'
+    # EMBEDDING_DIMENSION = 384  # 모델에 맞춰 수정
+    EMBEDDING_MODEL = "text-embedding-3-small"   # OpenAI 모델명  
+    EMBEDDING_DIMENSION = 1536                   # OpenAI 모델의 차원수
+    # --- [Case 1] 비용 0원, 내 컴퓨터 활용 (안전빵) ---
+    # EMBEDDING_MODEL = "jhgan/ko-sroberta-multitask"
+    # EMBEDDING_DIMENSION = 768
+
+    # --- [Case 2] 유료지만 성능 확실 (한국어 최강) ---
+    # EMBEDDING_MODEL = "upstage/solar-1-mini-embedding"
+    # EMBEDDING_DIMENSION = 4096
+
+    # --- [Case 3] 현재 설정 (주의: 대량 데이터 시 비용 발생) ---
+    EMBEDDING_MODEL = "text-embedding-3-small"    # $0.00002 ( 1k 약 27원)    2.3G 기준 2~3만원 2026.1 기준. 10억 토큰 
+    EMBEDDING_DIMENSION = 1536                    # 
+    # EMBEDDING_MODEL = "text-embedding-3-large"  # 0.00013     2.3G 기준 15~16만원 2026.1 기준.
+    # EMBEDDING_DIMENSION = 3072                  # 
     
     # ========================
     # 벡터 DB 설정 (Day 3+ 핵심)
