@@ -12,7 +12,7 @@ from pptx import Presentation
 
 # 1. 경로 설정
 SOURCE_DIR = Path(r"C:/Users/USER/Downloads/@@@인도네시아PDT암센터FS")
-OUTPUT_DIR = Path(r"C:/Users/USER/rag/src/data/text_converted_v4")
+OUTPUT_DIR = Path(r"C:/Users/USER/rag/src/data/text_converted")
 
 # 로그 설정
 logging.basicConfig(
