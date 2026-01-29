@@ -51,15 +51,24 @@ def process_and_save():
             loader = TextLoader(file_path, encoding='utf-8')
             raw_docs = loader.load()
             
-            # [지시사항] 본문 Source 제거 및 메타데이터 이관
             for doc in raw_docs:
                 if "Source:" in doc.page_content:
-                    # 첫 줄(Source:)을 제외한 나머지 본문만 합침
                     content_lines = doc.page_content.split('\n')
-                    doc.page_content = "\n".join(content_lines[1:]).strip()
+                    # 1. 첫 줄에서 "Source: " 제거 및 경로 분리
+                    source_line = content_lines[0].replace("Source:", "").strip()
+                    
+                    # 2. 경로에서 실제 파일명(.pdf 포함)만 추출
+                    # [수정] os.path.basename을 사용하여 끝단 파일명만 가져옴
+                    original_full_name = os.path.basename(source_line)
+                    
+                    # 3. 본문에서 첫 줄과 구분선(---) 제거 (깔끔한 본문 유지)
+                    # 통상 Source줄 다음줄은 구분선이므로 2번째 줄부터 합침
+                    doc.page_content = "\n".join(content_lines[2:]).strip()
+                else:
+                    original_full_name = file_name # Source 문구 없을 시 예외처리
                 
-                # doc.metadata["source"] = file_path (키 이름 통일)
-                doc.metadata[Settings.META_SOURCE_KEY] = file_path
+                # 4. 메타데이터에 진짜 .pdf 파일명 주입
+                doc.metadata[Settings.META_SOURCE_KEY] = original_full_name
             
             # 청크 분할 및 저장
             final_chunks = text_splitter.split_documents(raw_docs)
