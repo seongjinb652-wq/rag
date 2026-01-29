@@ -1,0 +1,7 @@
+{
+  "db_path": "C:\\Users\\USER\\rag\\src\\data\\chroma_db",
+  "collection_name": "rag_documents",
+  "total_documents": 5,
+  "model": "paraphrase-multilingual-MiniLM-L12-v2",
+  "embedding_dimension": 768
+}
