@@ -114,7 +114,7 @@ def process_and_save():
             while not success:
                 try:
                     vector_db.add_texts(texts=chunks, metadatas=metadatas)
-                    time.sleep(0.2)  # 인베딩 과부하 방지 휴식
+                    time.sleep(Settings.SLEEP_INTERVAL)  # 인베딩 과부하 방지 휴식
                     success = True
                 except Exception as e:
                     if "429" in str(e):
