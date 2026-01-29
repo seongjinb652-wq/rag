@@ -1,4 +1,4 @@
-# (단락보존 + 키워드 가중치형 + 메모리 초기화 + .env 로드)import os
+# (단락보존 + 키워드 가중치형 + 메모리 초기화 + .env 로드)
 import os
 import shutil
 from langchain_openai import OpenAIEmbeddings
@@ -39,7 +39,7 @@ def process_and_save():
     input_dir = Settings.DATA_DIR / "text_converted"
     all_files = [f for f in os.listdir(input_dir) if f.endswith(".txt")]
     
-    print(f"🚀 총 {len(all_files)}개 파일 적재 시작 (초기화 모드)")
+    print(f"🚀 총 {len(all_files)}개 파일 적재 시작 (초기화 v3 모드)")
 
     for file_name in all_files:
         file_path = os.path.join(input_dir, file_name)
@@ -47,19 +47,31 @@ def process_and_save():
             loader = TextLoader(file_path, encoding='utf-8')
             raw_docs = loader.load()
             
-            # [지시사항] 본문 Source 제거 및 메타데이터 이관
+            # [지시사항 반영] 본문 첫 줄에서 원본 파일명 추출 및 본문 정제
             for doc in raw_docs:
-                if "Source:" in doc.page_content:
-                    content_lines = doc.page_content.split('\n')
-                    doc.page_content = "\n".join(content_lines[1:]).strip()
+                lines = doc.page_content.split('\n')
                 
+                if lines and lines[0].startswith("Source:"):
+                    # 1) 원본 경로 추출 및 OS 통합 대응 (윈도우/맥)
+                    full_source_path = lines[0].replace("Source:", "").strip()
+                    unified_path = full_source_path.replace('\\', '/')
+                    # 2) 파일명(확장자 포함)만 추출
+                    original_name = unified_path.split('/')[-1]
+                    
+                    # 3) 본문 정제: Source줄과 구분선 제거 (2행부터 본문 시작)
+                    doc.page_content = "\n".join(lines[2:]).strip()
+                else:
+                    # 예외 발생 시 txt 파일명에서 해시 제거하여 사용
+                    original_name = file_name.rsplit('_', 1)[0]
+                
+                # 4) 메타데이터에 원본 파일명(.pdf 등) 기록
                 # doc.metadata["source"] = file_path
-                doc.metadata[Settings.META_SOURCE_KEY] = file_path
+                doc.metadata[Settings.META_SOURCE_KEY] = original_name
             
             # 청크 분할 및 적재
             final_chunks = text_splitter.split_documents(raw_docs)
             vector_db.add_documents(final_chunks)
-            print(f"✅ 적재 완료: {file_name}")
+            print(f"✅ 적재 완료: {original_name}")
 
         except Exception as e:
             print(f"❌ 오류 발생 ({file_name}): {e}")
