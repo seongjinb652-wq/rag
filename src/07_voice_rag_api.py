@@ -54,7 +54,6 @@ def perform_rag_search(query: str):
         
         # 1. 본문 안에 "Source:"라는 단어가 포함되어 있는지 확인
         if "Source:" in content:
-            # Source: 로 시작하는 줄을 정확히 찾아냄
             lines = content.split('\n')
             source_line = ""
             actual_body = []
@@ -62,36 +61,55 @@ def perform_rag_search(query: str):
             for line in lines:
                 if line.startswith("Source:"):
                     source_line = line.replace("Source:", "").strip()
-                elif line.strip() == "---": # 절취선 제외
+                # 수정: 하이픈이 여러 개 있는 구분선(v4용)이나 '---'를 모두 건너뜀
+                elif line.strip().startswith("---"): 
                     continue
                 else:
                     actual_body.append(line)
             
             # 경로 간소화 처리
             if source_line:
-                if root_folder_name in source_line:
-                    display_path = source_line.split(root_folder_name)[-1].lstrip('\\')
+                # v4의 슬래시(/) 경로와 v3의 역슬래시(\) 경로 모두 대응
+                source_line = source_line.replace('\\', '/')
+                target_root = root_folder_name.replace('\\', '/')
+                
+                if target_root in source_line:
+                    # Root 이후의 경로만 추출
+                    display_path = source_line.split(target_root)[-1].lstrip('/')
                 else:
                     display_path = os.path.basename(source_line)
+                
                 sources.append(display_path)
             
             context_list.append("\n".join(actual_body))
         else:
-            # Source 문구가 아예 없는 경우 기존 메타데이터 참조
+            # Source 문구가 없는 옛날 데이터 처리
             context_list.append(content)
-            sources.append(d.metadata.get("source", "알 수 없음"))
+            raw_src = d.metadata.get("source", "알 수 없음")
+            sources.append(os.path.basename(raw_src))
     
-    sources = list(set([s for s in sources if s])) # 빈 값 제외 및 중복 제거
-    context = "\n".join(context_list)
+    # [검증 포인트 1] 중복 제거 및 정렬 (가장 깔끔한 최종 형태 하나만 남기기)
+    sources = sorted(list(set([s for s in sources if s]))) 
     
+    # [검증 포인트 2] 컨텍스트 결합
+    context = "\n\n".join(context_list) # 문서 간 구분을 위해 \n\n 추천
+    
+    # [검증 포인트 3] 프롬프트 구성 및 LLM 호출
     prompt = f"다음 문맥을 바탕으로 질문에 정확히 답하세요:\n\n{context}\n\n질문: {refined_query}"
-    response = llm.invoke(prompt)
     
+    try:
+        response = llm.invoke(prompt)
+        answer = response.content
+    except Exception as e:
+        logger.error(f"LLM 호출 에러: {e}")
+        answer = "답변을 생성하는 중에 오류가 발생했습니다."
+
+    # [최종 결과 반환]
     return {
         "original_text": query,
         "refined_query": refined_query,
-        "answer": response.content,
-        "sources": sources
+        "answer": answer,
+        "sources": sources  # 이제 리스트 형태로 정확히 나갑니다.
     }
 # 3. API 엔드포인트
 class ChatRequest(BaseModel):
