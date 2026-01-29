@@ -1,4 +1,82 @@
 import os
+import json
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import TextLoader
+from config import Settings  # 중앙 설정 참조
+
+def process_and_save():
+    # 1. DB 및 모델 설정 (기존 값 주석 보존)
+    # DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
+    db_path = str(Settings.CHROMA_DB_PATH)
+    # COLLECTION_NAME = "indonesia_pdt_docs"
+    collection_name = Settings.CHROMA_COLLECTION_NAME
+    # embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = OpenAIEmbeddings(model=Settings.EMBEDDING_MODEL)
+
+    # 2. 텍스트 분할 설정 (기존 값 주석 보존)
+    # text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=Settings.CHUNK_SIZE,
+        chunk_overlap=Settings.CHUNK_OVERLAP
+    )
+
+    # 3. 벡터 DB 초기화/연결
+    vector_db = Chroma(
+        persist_directory=db_path,
+        embedding_function=embeddings,
+        collection_name=collection_name
+    )
+
+    # 4. 작업 대상 파일 목록 (config의 DATA_DIR 내 text_converted 폴더 기준)
+    input_dir = Settings.DATA_DIR / "text_converted"
+    # state_file = "batch_state.json"
+    state_file = Settings.BATCH_STATE_FILE
+
+    # v4 이어넣기 상태 로드
+    processed_files = set()
+    if os.path.exists(state_file):
+        with open(state_file, "r", encoding="utf-8") as f:
+            processed_files = set(json.load(f))
+
+    all_files = [f for f in os.listdir(input_dir) if f.endswith(".txt")]
+    
+    for file_name in all_files:
+        if file_name in processed_files:
+            continue
+            
+        file_path = os.path.join(input_dir, file_name)
+        try:
+            loader = TextLoader(file_path, encoding='utf-8')
+            raw_docs = loader.load()
+            
+            # [지시사항] 본문 Source 제거 및 메타데이터 이관
+            for doc in raw_docs:
+                if "Source:" in doc.page_content:
+                    # 첫 줄(Source:)을 제외한 나머지 본문만 합침
+                    content_lines = doc.page_content.split('\n')
+                    doc.page_content = "\n".join(content_lines[1:]).strip()
+                
+                # doc.metadata["source"] = file_path (키 이름 통일)
+                doc.metadata[Settings.META_SOURCE_KEY] = file_path
+            
+            # 청크 분할 및 저장
+            final_chunks = text_splitter.split_documents(raw_docs)
+            vector_db.add_documents(final_chunks)
+            
+            # 진행 상태 기록 (v4 이어넣기)
+            processed_files.add(file_name)
+            with open(state_file, "w", encoding="utf-8") as f:
+                json.dump(list(processed_files), f, ensure_ascii=False, indent=4)
+            
+            print(f"✅ 적재 완료: {file_name}")
+
+        except Exception as e:
+            print(f"❌ 오류 발생 ({file_name}): {e}")
+
+if __name__ == "__main__":
+    process_and_save()import os
 import logging
 from pathlib import Path
 from langchain_openai import OpenAIEmbeddings
