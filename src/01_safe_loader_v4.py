@@ -163,7 +163,7 @@ def process_and_save():
         sample = vector_db.get(limit=1, include=['documents', 'metadatas'])
         if sample['documents']:
             print(f"🔗 검증 출처: {sample['metadatas'][0].get(Settings.META_SOURCE_KEY)}")
-            print(f"📝 내용 샘플: {sample['documents'][0][:50].replace('\n', ' ')}...")
+            print(f"📝 내용 샘플: {sample['documents'][0][:50]}...")
     except: pass
     print("="*60)
 
