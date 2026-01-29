@@ -75,10 +75,13 @@ class Settings:
     # ========================
     # 임베딩 설정 (Day 3+)
     # ========================
-    # 원본: EMBEDDING_MODEL = 'sentence-transformers/xlm-r-base-multilingual-nli-stsb'
-    EMBEDDING_DIMENSION = 768
-    # 수정본: 현재 2.3GB DB를 생성한 실제 모델
+    # 한국어 특화 사용 시 (768차원)
+    # EMBEDDING_MODEL = 'ko-sbert-multitask'
+    # EMBEDDING_DIMENSION = 768
+
+    # 현재 2.3GB DB를 생성한 실제 모델 (384차원)
     EMBEDDING_MODEL = 'paraphrase-multilingual-MiniLM-L12-v2'
+    EMBEDDING_DIMENSION = 384  # 모델에 맞춰 수정
     
     # ========================
     # 벡터 DB 설정 (Day 3+ 핵심)
