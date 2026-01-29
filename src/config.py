@@ -93,8 +93,8 @@ class Settings:
     # EMBEDDING_DIMENSION = 4096
 
     # --- [Case 3] 현재 설정 (주의: 대량 데이터 시 비용 발생) ---
-    EMBEDDING_MODEL = "text-embedding-3-small"    # $0.00002 ( 1k 약 27원)    2.3G 기준 2~3만원 2026.1 기준. 10억 토큰 
-    EMBEDDING_DIMENSION = 1536                    # 
+    # EMBEDDING_MODEL = "text-embedding-3-small"    # $0.00002 ( 1k 약 27원)    2.3G 기준 2~3만원 2026.1 기준. 10억 토큰 
+    # EMBEDDING_DIMENSION = 1536                    # 
     # EMBEDDING_MODEL = "text-embedding-3-large"  # 0.00013     2.3G 기준 15~16만원 2026.1 기준.
     # EMBEDDING_DIMENSION = 3072                  # 
     
