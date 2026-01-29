@@ -1,51 +1,53 @@
 import os
-from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain_chroma import Chroma
-from langchain.chains import RetrievalQA
+from langchain_community.vectorstores import Chroma
+from config import Settings # 중앙 설정 참조
 
-# .env 로드
-load_dotenv()
+def search_test():
+    # 1. DB 및 모델 설정 (기존 값 주석 보존)
+    # DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
+    db_path = str(Settings.CHROMA_DB_PATH)
+    # COLLECTION_NAME = "indonesia_pdt_docs"
+    collection_name = Settings.CHROMA_COLLECTION_NAME
+    # embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    embeddings = OpenAIEmbeddings(model=Settings.EMBEDDING_MODEL)
 
-# 설정
-DB_PATH = r"C:/Users/USER/rag/src/data/chroma_db"
-COLLECTION_NAME = "indonesia_pdt_docs"
-
-def test_rag_query(query):
-    # 1. 임베딩 및 DB 연결
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    # 2. 벡터 DB 연결
     vector_db = Chroma(
-        persist_directory=DB_PATH,
+        persist_directory=db_path,
         embedding_function=embeddings,
-        collection_name=COLLECTION_NAME
+        collection_name=collection_name
     )
 
-    # 2. 모델 설정 (답변용 GPT-4o)
-    llm = ChatOpenAI(model_name="gpt-4o", temperature=0)
-
-    # 3. RAG 체인 구축
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vector_db.as_retriever(search_kwargs={"k": 5}), # 관련 문서 5개 참조
-        return_source_documents=True
-    )
-
-    # 4. 질문 실행
-    print(f"\n🙋 질문: {query}")
-    print("-" * 50)
-    result = qa_chain.invoke({"query": query})
-
-    print(f"🤖 답변:\n{result['result']}")
-    print("-" * 50)
+    # 3. 검색 및 LLM 설정 (기존 값 주석 보존)
+    # llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
+    llm = ChatOpenAI(model_name=Settings.OPENAI_MODEL, temperature=0)
     
-    # 참조된 소스 파일 확인
-    print("📚 참고한 문서 목록:")
-    sources = set([doc.metadata['source'] for doc in result['source_documents']])
-    for src in sources:
-        print(f"- {src}")
+    query = "인도네시아 PDT 암센터 건립 예산은 얼마인가요?" 
+    print(f"\n🔍 질문: {query}")
+
+    # 4. 유사도 검색 실행 (K값 Settings 연동)
+    # docs = vector_db.similarity_search(query, k=5)
+    docs = vector_db.similarity_search(query, k=Settings.VECTOR_SEARCH_K)
+
+    print(f"\n📄 검색된 문서 개수: {len(docs)}")
+    print("-" * 50)
+
+    for i, doc in enumerate(docs, 1):
+        # [지시사항] META_SOURCE_KEY를 활용한 출처 출력
+        # source = doc.metadata.get("source", "알 수 없음")
+        source = doc.metadata.get(Settings.META_SOURCE_KEY, "알 수 없음")
+        
+        print(f"[{i}] 출처: {os.path.basename(source)}")
+        print(f"내용: {doc.page_content[:150]}...")
+        print("-" * 50)
+
+    # 5. LLM 답변 생성 테스트
+    context = "\n\n".join([d.page_content for d in docs])
+    prompt = f"다음 문맥을 바탕으로 질문에 답하세요:\n\n{context}\n\n질문: {query}"
+    
+    response = llm.invoke(prompt)
+    print(f"\n🤖 LLM 답변:\n{response.content}")
 
 if __name__ == "__main__":
-    # 테스트 질문
-    user_query = "인도네시아 PDT 사업의 리스크가 뭐야? 사업성 평가 보고서 내용을 중심으로 알려줘."
-    test_rag_query(user_query)
+    search_test()
