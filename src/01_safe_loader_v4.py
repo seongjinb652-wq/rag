@@ -76,7 +76,8 @@ def process_and_save():
             print(f"❌ 오류 발생 ({file_name}): {e}")
 
 if __name__ == "__main__":
-    process_and_save()import os
+    process_and_save()
+import os
 import logging
 from pathlib import Path
 from langchain_openai import OpenAIEmbeddings
