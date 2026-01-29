@@ -52,25 +52,28 @@ def process_and_save():
             raw_docs = loader.load()
             
             for doc in raw_docs:
-                if "Source:" in doc.page_content:
-                    lines = doc.page_content.split('\n')
-                    # 1. 첫 줄에서 "Source:" 문구 제거
-                    full_source_path = lines[0].replace("Source:", "").strip()
+                # 1. 문서 전체 내용을 줄 단위로 분리
+                lines = doc.page_content.split('\n')
+                first_line = lines[0].strip() # 첫 줄 추출
+                
+                # 2. "Source:" 문구가 있는지 확인하고 파싱
+                if first_line.startswith("Source:"):
+                    # "Source:" 글자 자체를 걷어내고 경로만 남김
+                    full_path = first_line.replace("Source:", "").strip()
                     
-                    # 2. [OS 통합 대응] 윈도우(\)든 맥(/)이든 모두 슬래시(/)로 통일
-                    unified_path = full_source_path.replace('\\', '/')
-                    
-                    # 3. 마지막 슬래시 뒤의 파일명 전체 추출 (확장자 포함)
+                    # 3. [OS 통합] 윈도우(\)와 맥(/) 경로 구분자를 /로 통일하여 마지막 파일명 추출
+                    # 이렇게 해야 '...제안 요약 - 20241226-2-1.pdf' 전체가 잡힙니다.
+                    unified_path = full_path.replace('\\', '/')
                     original_name = unified_path.split('/')[-1]
                     
-                    # 4. 본문 정제: 첫 줄(Source)과 구분선(---) 제거
-                    # 데이터 확인 결과 Source 다음 줄에 점선이 있으므로 2번째 줄부터 본문 취급
+                    # 4. 본문 정제: 첫 줄(Source)과 그 다음 구분선(---)까지 제거
+                    # 보통 0, 1번 줄이 메타데이터이므로 2번 줄부터 본문으로 사용
                     doc.page_content = "\n".join(lines[2:]).strip()
                 else:
-                    # Source 문구가 없을 경우 텍스트 파일명에서 해시 제거 후 사용
-                    original_name = file_name.rsplit('_', 1)[0]
-                
-                # 메타데이터 주입
+                    # 만약 첫 줄에 Source가 없다면, 차선책으로 txt 파일명에서 해시 제거
+                    original_name = file_name.rsplit('_', 1)[0] + ".pdf" # 확장자 강제 부여
+
+                # 5. 최종 결정된 '원본명.pdf'를 메타데이터에 주입
                 doc.metadata[Settings.META_SOURCE_KEY] = original_name
             
             # 청크 분할 및 저장
