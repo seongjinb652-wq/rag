@@ -99,7 +99,18 @@ class Settings:
     
     # v4 이어넣기 상태 파일 (DATA_DIR 내부 고정)
     BATCH_STATE_FILE = _DATA_DIR / 'batch_state_local.json'
+    # ========================
+    # [추가 정의] Step 1~4 워크플로우 연동 메타데이터
+    # ========================
+    META_TOC_KEY = "toc_title"     # Step 1~2: 목차 생성 및 검증용 (전체 구조)
+    META_SECTION_KEY = "section"   # Step 3~4: 섹션별 상세 생성 및 검증용 (상세 내용)
     
+    # 앵커 정의 (문서 내 절대 좌표)
+    # 계약서면 'Article', 보고서면 'Page', 기획서면 'Slide'가 이 값에 담깁니다.
+    META_ANCHOR_KEY = "anchor"
+    # [추가 정의] 앵커 세부 유형 (문서 종류에 따른 동적 할당용)
+    META_PAGE_KEY = "page_label"  # PDF 실제 페이지 번호
+    META_SECTION_KEY = "section"  # 계약서 조항(Clause) 또는 목차명
     # ========================
     # API 및 서버 설정
     # ========================
