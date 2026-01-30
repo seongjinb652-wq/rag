@@ -73,7 +73,19 @@ def perform_rag_search(query: str):
     context = "\n\n".join(context_list)
     
     # v5 프롬프트 (간결성 유지)
-    prompt = f"다음 문맥을 바탕으로 질문에 정확히 답하세요:\n\n{context}\n\n질문: {refined_query}"
+    # prompt = f"다음 문맥을 바탕으로 질문에 정확히 답하세요:\n\n{context}\n\n질문: {refined_query}"
+    # 정보가 없는 질문에 대해 지나치게 오래 생각하는 것을 방지
+    # 수정 후 (엄격함과 속도 동시 확보)
+    prompt = (
+        f"너는 지식베이스 기반의 비서야. 다음 문맥에 답변에 필요한 정보가 포함되어 있는지 확인해.\n"
+        f"1. 정보가 있다면 핵심만 간결하게 답해.\n"
+        f"2. 만약 정보가 없다면, 절대 지어내지 말고 1초 안에 '현재 문서에서는 확인되지 않습니다'라고만 답해.\n\n"
+        f"3. 정보가 없는 경우 1초 이내에 '현재 문서에서는 1초내에는 확인되지 않습니다. 정확한 응답을 원하면 셋팅을 바꾸세요'라고만 즉시 답변하라.\n\n"
+        f"문맥: {context}\n\n"
+        f"질문: {refined_query}"
+    )
+
+
     
     try:
         response = llm.invoke(prompt)
