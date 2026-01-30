@@ -2,17 +2,21 @@ import os
 import uvicorn
 import io
 import logging
+import uuid           # 음성지원시 최초 삽입
 # import time         # 속도 측정외 사용하지 않음.
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File # 음성지원 업로드 다운로드에 사용
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from faster_whisper import WhisperModel
-
 # v5 설정 및 교정 함수 로드
 from config import Settings
 from alias_map import clean_and_refine
+from fastapi.responses import FileResponse # 음성지원시 최초 삽입
+# OpenAI 클라이언트 초기화 (TTS/Whisper용) - 상단에 추가 권장
+from openai import OpenAI
+client = OpenAI(api_key=Settings.OPENAI_API_KEY)
 
 logger = logging.getLogger("uvicorn")
 
@@ -124,7 +128,46 @@ async def chat_voice(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/voice-query")
+async def voice_query(file: UploadFile = File(...)):
+    task_id = str(uuid.uuid4())[:8]
+    in_wav = f"temp_in_{task_id}.wav"
+    out_mp3 = f"temp_out_{task_id}.mp3"
+
+    try:
+        with open(in_wav, "wb") as f:
+            f.write(await file.read())
+
+        # STT (귀): OpenAI Whisper 호출
+        with open(in_wav, "rb") as f:
+            transcript = client.audio.transcriptions.create(model="whisper-1", file=f)
+        user_text = transcript.text
+
+        # RAG (두뇌): perform_rag_search 호출 (결과값 중 answer만 추출)
+        rag_result = perform_rag_search(user_text)
+        answer_text = rag_result["answer"]
+
+        # TTS (입): OpenAI TTS 호출
+        audio_response = client.audio.speech.create(
+            model="tts-1",
+            voice="alloy",
+            input=answer_text
+        )
+        audio_response.stream_to_file(out_mp3)
+
+        return {
+            "query": user_text,
+            "answer": answer_text,
+            "sources": rag_result["sources"], # 출처도 같이 주면 좋음
+            "audio_url": f"/get-audio/{out_mp3}"
+        }
+    finally:
+        if os.path.exists(in_wav): os.remove(in_wav)
+
+@app.get("/get-audio/{file_path}")
+async def get_audio(file_path: str):
+    return FileResponse(file_path, media_type="audio/mpeg")
+
+# 메인 실행부는 가장 마지막에!
 if __name__ == "__main__":
-    # 포트 번호 Settings 연동
-    # uvicorn.run(app, host="0.0.0.0", port=8000)
     uvicorn.run(app, host="0.0.0.0", port=Settings.API_PORT)
