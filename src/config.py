@@ -81,7 +81,7 @@ class Settings:
     # ========================
     # 벡터 DB 및 메타데이터 설정
     # ========================
-    CHROMA_DB_PATH = _DATA_DIR / 'chroma_db'
+    CHROMA_DB_PATH = Settings._DATA_DIR / 'chroma_db'
     
     # [주석 보존] 기존 컬렉션명
     # CHROMA_COLLECTION_NAME = 'indonesia_pdt_docs' 
@@ -125,8 +125,8 @@ class Settings:
     META_PAGE_KEY = "page_label"       # PDF 실제 페이지 번호
     
     # v4 이어넣기 상태 파일 및 DB 검증 리포트
-    BATCH_STATE_FILE = _DATA_DIR / 'batch_state_local.json'
-    DB_CHECK_REPORT_FILE = _DATA_DIR / 'db_check_report.json'
+    BATCH_STATE_FILE = Settings._DATA_DIR / 'batch_state_local.json'
+    DB_CHECK_REPORT_FILE = Settings._DATA_DIR / 'db_check_report.json'
     
     # ========================
     # API 및 성능 설정
