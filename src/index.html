@@ -86,14 +86,14 @@
             };
 
             return (
-                <div className="flex flex-col h-screen max-w-2xl mx-auto shadow-xl bg-white">
+                <div className="flex flex-col h-screen max-w-2xl mx-auto shadow-xl bg-slate-100">
                     {/* Header */}
                     <header className="bg-slate-800 p-4 text-white text-center font-bold text-lg shadow-sm">
                         {CONFIG.TITLE}
                     </header>
 
                     {/* Chat Area */}
-                    <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                    <main className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-200">
                         {messages.length === 0 && (
                             <div className="text-center text-gray-400 mt-10 text-sm">대화를 시작해보세요!</div>
                         )}
