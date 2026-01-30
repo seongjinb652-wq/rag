@@ -88,7 +88,8 @@ class Settings:
     # 성능 설정
     # ========================
     API_TIMEOUT = 30  
-    VECTOR_SEARCH_K = 5  
+    # VECTOR_SEARCH_K = 5 
+    VECTOR_SEARCH_K = 4 
 
     @classmethod
     def validate(cls):
