@@ -19,6 +19,7 @@ def test_voice(file_path):
     if response.status_code == 200:
         res = response.json()
         print(f"🎙️ 인식: {res['original_text']}")
+        print(f"🔍 교정: {res.get('refined_query', 'N/A')}")
         print(f"🤖 답변: {res['answer'][:100]}...")
         # v5 표준 출처 확인
         print(f"📂 출처: {res['sources']}")
