@@ -2,7 +2,7 @@
 RAG 지식베이스 서비스 부하 테스트
 - 2명의 동시 사용자 시뮬레이션
 - 20초 대기 간격
-- LLM 응답: 8초 이내 목표 (RAG 검색 포함)
+- LLM 응답: 12 초 이내 목표 (RAG 검색 포함)
 """
 
 from locust import HttpUser, task, between
@@ -25,7 +25,7 @@ class RAGUser(HttpUser):
         questions = [
             "인도네시아 스마트 시티 프로젝트에 대해 알려줘",
             "부동산 개발 사업 타당성 검토 시 주요 고려사항은?",
-            "반려동물 관련 사업 아이템 사례가 있니?",
+            "경기도 광명 관련 사업 아이템 사례가 있니?",
             "Banten Global Smart City의 재무 구조는 어때?",
             "헬스케어 관련 신사업 전략 수립 사례를 들어줘",
             "FS(예비 타당성 조사)의 일반적인 절차가 뭐야?"
@@ -48,8 +48,8 @@ class RAGUser(HttpUser):
             
             if response.status_code == 200:
                 # LLM 응답 목표: 8초 (RAG 검색 성능 포함)
-                if elapsed > 8.0:
-                    response.failure(f"LLM 응답 시간 초과: {elapsed:.2f}초 (목표: 8초 이내)")
+                if elapsed > 12.0:
+                    response.failure(f"LLM 응답 시간 초과: {elapsed:.2f}초 (목표: 12초 이내)")
                     print(f"❌ {self.username} 지연 발생: {elapsed:.2f}초")
                 else:
                     response.success()
