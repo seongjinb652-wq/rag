@@ -89,7 +89,7 @@ class Settings:
     # ========================
     API_TIMEOUT = 30  
     # VECTOR_SEARCH_K = 5 
-    VECTOR_SEARCH_K = 4 
+    VECTOR_SEARCH_K = 2 
 
     @classmethod
     def validate(cls):
