@@ -85,7 +85,7 @@ workflow.add_edge("responder", END)
 app = workflow.compile()
 
 
-# 2. 실제 노드 함수 내 적용 예시
+# 실제 노드 함수 내 적용 예시
 def grade_documents(state: GraphState):
     question = state["question"]
     documents = state["documents"]
@@ -120,4 +120,5 @@ workflow.add_conditional_edges(
         "generate": "generate"
     }
 )
+
 
