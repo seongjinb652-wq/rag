@@ -90,7 +90,24 @@ class Settings:
     CHROMA_COLLECTION_NAME = 'as_bge_768_c2000'
     
     META_SOURCE_KEY = "source" 
-    
+    # =========================================================
+    # [2026-01-31 성진 추가 정의] 시스템 로직 제어 상수 분리
+    # =========================================================
+    # 인코딩 및 파일 처리
+    Settings.ENCODING = "utf-8"
+    Settings.FILE_ERRORS_STRATEGY = "ignore"
+
+    # 메타데이터 추출 관련
+    Settings.META_EXTRACT_LIMIT = 1000  # 연도 추출을 위한 본문 읽기 범위
+    Settings.YEAR_SEARCH_RANGE = range(2010, 2027)  # 문서 기준 연도 검색 범위
+
+    # 임베딩 모델 세부 설정
+    Settings.EMBEDDING_KWARGS = {'device': Settings.EMBEDDING_DEVICE}
+    Settings.ENCODE_KWARGS = {'normalize_embeddings': True}
+
+    # 디버그 및 디스플레이
+    Settings.DISPLAY_INTERVAL = 20  # 배치 보고 단위
+    Settings.LARGE_FILE_THRESHOLD = 50  # 대형 파일 판단 기준 (청크 수)
     # ========================
     # [추가 정의] 확장 메타데이터 키 (Step 1~4 연동 및 Check DB용)
     # 초기 적재 시 값이 없으면 null(None)로라도 그릇을 생성함
