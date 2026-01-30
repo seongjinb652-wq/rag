@@ -74,6 +74,40 @@ def planner_grader(state: GraphState):
 #     print("---[STEP 3] EXECUTE: 데이터 검색 및 가공---")
 #     # TODO: config_graph에서 정의한 K값 적용 예정
 #     return {"documents": ["연도별 프로젝트 데이터 샘플"]}
+
+# [STEP 3-A] Search: 기본 골격 복구 (상세화 전 기본 검색)
+# def search_node(state: GraphState):
+#     print(f"---[STEP 3-A] SEARCH: 기본 데이터 수집 (Retry: {state.get('current_retry', 0)})---")
+#     question = state.get("question", "")
+#     current_retry = state.get("current_retry", 0)
+    
+#     # [기본 골격]: 질문 복잡도에 따라 K값 결정
+#     k = CONFIG["K_DEEP"] if current_retry > 0 or any(kw in question for kw in CONFIG["COMPLEX_KEYWORDS"]) else CONFIG["K_FAST"]
+    
+#     # retriever는 외부 정의된 것으로 가정
+#     docs = retriever.invoke(question, k=k) 
+#     return {"documents": docs, "current_retry": current_retry}
+
+# # [STEP 3-B] Stepwise Generator: 목차별 상세 생성 (중요한 것만 기술)
+# def stepwise_generator(state: GraphState):
+#     print("---[STEP 3-B] GENERATOR: 목차별 상세 작성---")
+#     docs = state.get("documents", [])
+#     plan = state.get("plan", [])
+    
+#     context = "\n".join(docs)
+#     hint = CONFIG.get("SUMMARIZATION_HINT", "")
+    
+#     generated_sections = []
+#     for section in plan:
+#         prompt = f"데이터: {context}\n항목: {section}\n지침: {hint}\n전문적으로 작성하라."
+#         response = llm.invoke(prompt).content
+#         generated_sections.append(f"### {section}\n{response}")
+    
+#     return {"generation": "\n\n".join(generated_sections)}
+
+
+
+
 def search_node(state: GraphState):
     question = state.get("question", "")
     current_retry = state.get("current_retry", 0)
@@ -388,6 +422,7 @@ workflow.add_conditional_edges(
         "generate": "generate"
     }
 )
+
 
 
 
