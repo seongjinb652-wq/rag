@@ -2,6 +2,7 @@ import os
 import uvicorn
 import io
 import logging
+# import time         # 속도 측정외 사용하지 않음.
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
