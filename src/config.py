@@ -98,6 +98,10 @@ class Settings:
             raise ValueError("필수 설정 누락: OPENAI_API_KEY")
         return True
 
+    # ========================
+    # 음성지원 설정
+    # ========================
+
 # 폴더 초기화 실행
 Settings.init_directories()
 
